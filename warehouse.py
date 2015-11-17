@@ -51,14 +51,12 @@ it will generate a new table that looks like this.
 """
 
 import sqlite3
-import copy
 
 # -- Config -- #
 # Define settings for this table
 # A year and count of people in the group is automatically
 # added to each table.
 TABLE_CONFIG = {
-    "year": 2013,
     "dropPrevious": True,
     "verbose": True,
     "sourceDB": "mortality.db",
@@ -80,7 +78,6 @@ class Table:
         self.sourceTable = config["sourceTable"]
         self.destTable = config["destTable"]
         self.headers = config["selections"]
-        self.year = config["year"]
         self.verbose = config["verbose"]
 
         self.sourceConn = sqlite3.connect(self.config["sourceDB"])
@@ -137,9 +134,13 @@ class Table:
         """
 
         # Format selection criteria
-        groupings = ", ".join(self.headers)
-        selections = copy.deepcopy(self.headers)
-        selections.insert(0, "count(*)")
+        groupings = ["Data_Year"]
+        groupings.extend(self.headers)
+        print(groupings)
+        formattedGroupings = ", ".join(groupings)
+        selections = ["Data_Year", "count(*)"]
+        selections.extend(self.headers)
+        print(selections)
 
         if self.verbose:
             print("-- Reading Data --")
@@ -149,7 +150,7 @@ class Table:
             "SELECT {} FROM {} GROUP BY {}".format(
                     ", ".join(selections),
                     self.sourceTable,
-                    groupings
+                    formattedGroupings
                 )
         )
 
@@ -161,17 +162,17 @@ class Table:
         # Publish results
         for result in results:
             # Format results
-            values = [self.year]
-            values.extend(result)
-            values[1] = int(values[1])
+            result = list(result)
+            result[0] = int(result[0])
+            result[1] = int(result[1])
 
             # Insert into destination table
             self.destConn.execute(
                 "INSERT INTO {} VALUES ({})".format(
                     self.destTable,
-                    ", ".join(["?"]*len(values))
+                    ", ".join(["?"]*len(result))
                 ),
-                values
+                result
             )
 
             total += 1
