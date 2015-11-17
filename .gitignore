@@ -57,3 +57,7 @@ docs/_build/
 target/
 
 *.db
+
+*.dat
+
+VS13MORT.DUSMCPUB

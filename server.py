@@ -1,6 +1,7 @@
 from bottle import route, run, template, debug
 import sqlite3
 import json
+import datamappings
 
 CONFIG = {
     "database": "warehouse.db"
@@ -38,9 +39,13 @@ def mapColumns(datum, headerNames):
     }
 
     for index, header in enumerate(headerNames):
-        jsonItem[header] = datum[index+2]
+        if (header == "Education"):
+            jsonItem[header] = datamappings.educationLevel[datum[index+2]]
+        elif (header == "Cause Of Death"):
+            jsonItem[header] = datamappings.causeRecode39Headers[int(datum[index+2])-1]
 
     return jsonItem
+
 
 if __name__ == "__main__":
     debug(True)
