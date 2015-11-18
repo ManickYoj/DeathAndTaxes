@@ -1,0 +1,92 @@
+<html>
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta charset="utf-8">
+		<title>Death and Taxes</title>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+		<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+	</head>
+	<body>
+
+		<div>
+			<svg id="viz" height="500" width="1000" class="centeredSvg"></svg>
+		</div>
+
+		<script>
+
+		window.addEventListener("load",run);
+		
+		var GLOBAL = {data : []};
+
+		function run () {
+		    initializeView();
+		    (function() {
+			  var apiCall = "/EducationAndCause";
+			  $.get(apiCall)
+			    .done(function(data) {
+			    	GLOBAL.data = data;
+			    });
+			})();
+			setupOverview();
+		}
+
+		function computeSizes (svg) {     
+		    var height = svg.attr("height");
+		    var width = svg.attr("width");
+		    var margin = 100;
+		    return {height:height,
+			    width: width,
+			    margin: margin,
+			    chartHeight: height-2*margin,
+			    chartWidth: width-2*margin}
+		}    
+
+		function initializeView () { 
+
+		    var svg = d3.select("#viz");
+		    var s = computeSizes(svg);
+
+		    svg.append("text")
+			.attr("id","title")
+			.attr("x",s.width/2)
+		 	.attr("y",s.margin/3)
+			.attr("dy","0.3em")
+			.style("text-anchor","middle")
+
+		    svg.append("text")
+			.attr("id","info")
+			.attr("x",s.width/2)
+		 	.attr("y",s.margin/1.5)
+			.attr("dy","0.3em")
+			.style("text-anchor","middle")
+
+			svg.append("text")
+			.attr("id","selected")
+			.attr("x",s.width/2)
+		 	.attr("y",s.margin)
+			.attr("dy","0.3em")
+			.style("text-anchor","middle")
+
+			svg.append("text")
+			.attr("id", "loading")
+			.attr("x", s.width/2)
+			.attr("y", s.height/2)
+			.attr("dy", "0.3em")
+			.style("fill","#696969")
+			.style("text-anchor","middle")
+			.text("LOADING...");
+		}
+
+		function setupOverview(){
+			var svg = d3.select("#viz");
+			var s = computeSizes(svg);
+			svg.select("#loading")
+			.text(null)
+		}
+
+
+		</script>
+
+	</body>
+</html>
