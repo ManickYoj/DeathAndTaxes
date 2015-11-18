@@ -1,4 +1,4 @@
-from bottle import route, run, template, debug
+from bottle import route, run, template, debug, static_file
 import sqlite3
 import json
 import datamappings
@@ -17,8 +17,7 @@ def getTable(table):
 
 @route('/')
 def index():
-    return '<b>Hello</b>!'
-
+    return static_file('index.html', root='./')
 
 @route('/EducationAndCause')
 def eduAndCause():
@@ -46,7 +45,6 @@ def mapColumns(datum, headerNames):
 
     return jsonItem
 
-
 if __name__ == "__main__":
     debug(True)
-    run(host='localhost', port=3000, reloader=True)
+    run(host='localhost', port=3000)
