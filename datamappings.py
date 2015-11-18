@@ -67,6 +67,36 @@ educationLevel = {
   "99": "Not Started"
 }
 
+# ageOfDeath = {
+#   "01":"Under 1 year (includes not stated infant ages)",
+#   "02":"1-4 years",
+#   "03":"5-14 years",
+#   "04":"15-24 years",
+#   "05":"25-34 years",
+#   "06":"35-44 years",
+#   "07":"45-54 years",
+#   "08":"55-64 years",
+#   "09":"65-74 years",
+#   "10":"75-84 years",
+#   "11":"85 years and over",
+#   "12":"Age not stated"
+# }
+
+ageOfDeath = {
+  "01":0.5,
+  "02":2.5,
+  "03":9.5,
+  "04":19.5,
+  "05":29.5,
+  "06":39.5,
+  "07":49.5,
+  "08":59.5,
+  "09":69.5,
+  "10":79.5,
+  "11":95,
+  "12":"Age not stated"
+}
+
 mannerOfDeathHeaders = [
   "Accident",
   "Suicide",

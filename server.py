@@ -3,15 +3,24 @@ import sqlite3
 import json
 import datamappings
 
+isTest = False
+
 CONFIG = {
-    "database": "warehouse.db"
+    "database": "warehouse.db",
+    "testDatabase": "testwarehouse.db"
 }
 
-dbConn = sqlite3.connect(CONFIG["database"])
+DBCONN = {
+    "dbConn":sqlite3.connect(CONFIG["database"]),
+    "dbConnTest":sqlite3.connect(CONFIG["testDatabase"])
+}
 
+def getTable(test,table):
+    if not test:
+        result = DBCONN["dbConn"].execute("SELECT * FROM {}".format(table))
+    else:
+        result = DBCONN["dbConnTest"].execute("SELECT * FROM {}".format(table))
 
-def getTable(table):
-    result = dbConn.execute("SELECT * FROM {}".format(table))
     return result.fetchall()
 
 
@@ -19,9 +28,21 @@ def getTable(table):
 def index():
     return static_file('index.html', root='./')
 
+@route('/test')
+def testRun():
+    isTest = True
+    data = getTable(isTest, "CauseAndAgeTable")
+    if not data:
+        return []
+    else:
+        return json.dumps([
+            mapTestColumns(datum, ["Age of Death", "Cause Of Death"])
+            for datum in data
+        ])            
+
 @route('/EducationAndCause')
 def eduAndCause():
-    data = getTable("EducationAndCause39")
+    data = getTable(isTest, "EducationAndCause39")
     if not data:
         return []
     else:
@@ -29,6 +50,11 @@ def eduAndCause():
             mapColumns(datum, ["Education", "Cause Of Death"])
             for datum in data
         ])
+
+def mapTestColumns(datum, headerNames):
+    return datum
+    # TODO: JSON should look like
+    #  {"Year":2003, "Cause Of Death": Cancer, "Average Age Of Death": 40.3}
 
 
 def mapColumns(datum, headerNames):
