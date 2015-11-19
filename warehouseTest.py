@@ -9,12 +9,12 @@ TABLE_CONFIG = {
     "verbose": True,
     "sourceDB": "mortality.db",
     "sourceTable": "mortality",
-    "destDB": "testwarehouse.db",
-    "destTable": "CauseAndAgeTable",
+    "destDB": "warehouse.db",
+    "destTable": "EducationAndAge",
     "selections":
         [
-            "Age_Recode_12",
-            "Cause_Recode_39",
+            "Education",
+            "Age_Value",
         ]
 }
 

@@ -51,29 +51,18 @@ it will generate a new table that looks like this.
 """
 
 import sqlite3
+import tables
 
 # -- Config -- #
 # Define settings for this table
 # A year and count of people in the group is automatically
 # added to each table.
-TABLE_CONFIG = {
-    "dropPrevious": True,
-    "verbose": True,
-    "sourceDB": "mortality.db",
-    "sourceTable": "mortality",
-    "destDB": "warehouse.db",
-    "destTable": "EducationAndCause39",
-    "selections":
-        [
-            "Education",
-            "Cause_Recode_39",
-        ]
-}
+TABLE_CONFIG = tables.TABLES
 
 
 # -- Code Definitions -- #
 class Table:
-    def __init__(self, config=TABLE_CONFIG):
+    def __init__(self, config):
         self.config = config
         self.sourceTable = config["sourceTable"]
         self.destTable = config["destTable"]
@@ -186,6 +175,7 @@ class Table:
 
 # -- Running Code -- #
 if __name__ == "__main__":
-    t = Table()
-    t.convertRows()
-    t.close()
+    for tableConfig in TABLE_CONFIG:
+        t = Table(tableConfig)
+        t.convertRows()
+        t.close()
