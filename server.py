@@ -1,75 +1,61 @@
-from bottle import route, run, template, debug, static_file
+from bottle import route, run, debug, static_file
 import sqlite3
 import json
-import datamappings
+import tables
 
 isTest = False
 
 CONFIG = {
     "database": "warehouse.db",
-    "testDatabase": "testwarehouse.db"
 }
 
-DBCONN = {
-    "dbConn":sqlite3.connect(CONFIG["database"]),
-    "dbConnTest":sqlite3.connect(CONFIG["testDatabase"])
-}
-
-def getTable(test,table):
-    if not test:
-        result = DBCONN["dbConn"].execute("SELECT * FROM {}".format(table))
-    else:
-        result = DBCONN["dbConnTest"].execute("SELECT * FROM {}".format(table))
-
-    return result.fetchall()
+DBCONN = sqlite3.connect(CONFIG["database"])
+AVAILABLE_TABLES = tables.SERVER_TABLES
 
 
 @route('/')
 def index():
     return static_file('index.html', root='./')
 
-@route('/test')
-def testRun():
-    isTest = True
-    data = getTable(isTest, "CauseAndAgeTable")
-    if not data:
+
+@route('/<tableName>')
+def getDataFromTable(tableName):
+    # If table does not exist, return
+    if tableName not in AVAILABLE_TABLES:
         return []
-    else:
-        return json.dumps([
-            mapTestColumns(datum, ["Age of Death", "Cause Of Death"])
-            for datum in data
-        ])            
 
-@route('/EducationAndCause')
-def eduAndCause():
-    data = getTable(isTest, "EducationAndCause39")
-    if not data:
-        return []
-    else:
-        return json.dumps([
-            mapColumns(datum, ["Education", "Cause Of Death"])
-            for datum in data
-        ])
+    # Get data
+    tableData = DBCONN.execute("SELECT * FROM {}".format(tableName))
 
-def mapTestColumns(datum, headerNames):
-    return datum
-    # TODO: JSON should look like
-    #  {"Year":2003, "Cause Of Death": Cancer, "Average Age Of Death": 40.3}
+    # Get formatting data
+    columnInfo = [
+        {"header": "Year"},
+        {"header": "Number in Group"}
+    ]
+    columnInfo.extend(AVAILABLE_TABLES[tableName])
+
+    # Return data, mapped into a formatted state
+    return json.dumps([  # A list comprehension of each datum
+         formatDatum(datum, columnInfo) for datum in tableData
+    ])
 
 
-def mapColumns(datum, headerNames):
-    jsonItem = {
-        "Year": datum[0],
-        "Number in Group": datum[1]
-    }
+def formatDatum(datum, columnInfo):
+    formattedDatum = {}
 
-    for index, header in enumerate(headerNames):
-        if (header == "Education"):
-            jsonItem[header] = datamappings.educationLevel[datum[index+2]]
-        elif (header == "Cause Of Death"):
-            jsonItem[header] = datamappings.causeRecode39Headers[int(datum[index+2])-1]
+    for index, column in enumerate(columnInfo):
+        if "mapFunc" in column:
+            formattedValue = column["mapFunc"](str(datum[index]))
 
-    return jsonItem
+        elif "mapping" in column:
+            formattedValue = column["mapping"][str(datum[index])]
+
+        else:
+            formattedValue = datum[index]
+
+        formattedDatum[column["header"]] = formattedValue
+
+    return formattedDatum
 
 if __name__ == "__main__":
     debug(True)

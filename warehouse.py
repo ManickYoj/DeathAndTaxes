@@ -60,7 +60,7 @@ import tables
 #
 # A year and count of people in the group is automatically
 # added to each table.
-TABLE_CONFIG = tables.TABLES
+TABLE_CONFIG = tables.SERVER_TABLES
 
 
 # -- Code Definitions -- #
