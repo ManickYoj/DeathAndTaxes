@@ -1,20 +1,38 @@
 $(run);
 
 const GLOBAL = {
-  data : []
+  data : [],
+  years : ["2003","2008", "2013"],
+  education : [
+    "Not Specified", 
+    "No formal education", 
+    "Years of elementary school", 
+    "1 Year of high school",
+    "2 Years of high school",
+    "3 Years of high school",
+    "4 Years of high school",
+    "1 Year of college",
+    "2 Years of college",
+    "3 Years of college",
+    "4 Years of college",
+    "5 or more years of college",
+    "Not Started"
+  ]
 };
 
 function run () {
+
   initializeView();
   (function() {
-  var apiCall = "/EducationAndCause39";
+  var apiCall = "/EducationAndAge";
   $.get(apiCall)
     .done(function(data) {
-      GLOBAL.data = data;
+      GLOBAL.data = JSON.parse(data);
     });
   })();
-  setupOverview();
+  setupData();
 }
+
 
 function computeSizes (svg) {
     const height = svg.attr("height");
@@ -30,9 +48,10 @@ function computeSizes (svg) {
 }
 
 function initializeView () { 
-  const svg = d3.select("#viz");
+  const svg = d3.select("#eduAgeViz");
   const s = computeSizes(svg);
 
+  // title of graph
   svg.append("text")
   .attr({
     id: "title",
@@ -43,29 +62,22 @@ function initializeView () {
   .style({
     "text-anchor": "middle",
   })
+  .text("Education Level vs. Age of Death");
 
-  svg.append("text")
-  .attr({
-    id: "info",
-    x: s.width/2,
-    y: s.margin/1.5,
-    dy: "0.3em",
-  })
-  .style({
-    "text-anchor": "middle",
-  })
-
+  // what year
   svg.append("text")
   .attr({
     id: "selected",
-    x: s.width/2,
-    y: s.margin,
+    x: s.width/2, 
+    y: s.margin/2.1,
     dy: "0.3em",
   })
   .style({
     "text-anchor": "middle"
   })
+  .text("2003 Data");
 
+  // loading placeholder
   svg.append("text")
   .attr({
     id: "loading",
@@ -80,10 +92,20 @@ function initializeView () {
   .text("LOADING...");
 }
 
-function setupOverview(){
-  const svg = d3.select("#viz");
-  const s = computeSizes(svg);
+function setupData(){
+  getDataRows(2013);
+}
 
-  svg.select("#loading")
-  .text(null)
+// function setupOverview(){
+//   const svg = d3.select("#eduAgeViz");
+//   const s = computeSizes(svg);
+
+//   svg.select("#loading")
+//   .text(null)
+// }
+
+function getDataRows (year) {
+  return GLOBAL.data.filter(function(row){
+    return (row["Year"]===year)
+  })
 }
