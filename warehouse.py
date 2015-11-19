@@ -54,7 +54,10 @@ import sqlite3
 import tables
 
 # -- Config -- #
-# Define settings for this table
+# Define a list of dictionaries of settings for the tables
+# you would like to generate. Each item in the list will
+# generate a new table.
+#
 # A year and count of people in the group is automatically
 # added to each table.
 TABLE_CONFIG = tables.TABLES
@@ -125,11 +128,9 @@ class Table:
         # Format selection criteria
         groupings = ["Data_Year"]
         groupings.extend(self.headers)
-        print(groupings)
         formattedGroupings = ", ".join(groupings)
         selections = ["Data_Year", "count(*)"]
         selections.extend(self.headers)
-        print(selections)
 
         if self.verbose:
             print("-- Reading Data --")
