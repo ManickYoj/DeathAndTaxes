@@ -136,11 +136,9 @@ class Table:
         # Format selection criteria
         groupings = ["Data_Year"]
         groupings.extend(self.headers)
-        print(groupings)
         formattedGroupings = ", ".join(groupings)
         selections = ["Data_Year", "count(*)"]
         selections.extend(self.headers)
-        print(selections)
 
         if self.verbose:
             print("-- Reading Data --")
