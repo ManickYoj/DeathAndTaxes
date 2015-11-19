@@ -6,15 +6,26 @@ const GLOBAL = {
 
 function run () {
   initializeView("#viz1");
-
-  (function() {
-  var apiCall = "/EducationAndCause39";
-  $.get(apiCall)
-    .done(function(data) {
-      GLOBAL.data = data;
-    });
-  })();
+  getTableData("EducationAndAge", (data) => {
+    GLOBAL.data = data;
+  });
   setupOverview();
+
+  const v2 = new viz(
+    "EducationAndCause39",
+    "#viz2",
+    "Education",
+    "Cause of Death",
+    () => {
+      v2.viewAsBubbleField();
+    }
+  );
+}
+
+function getTableData(tableName, callback) {
+  $.get("/" + tableName).done((data) => {
+    callback(JSON.parse(data));
+  });
 }
 
 function computeSizes (svg) {
@@ -87,4 +98,30 @@ function setupOverview(){
 
   svg.select("#loading")
   .text(null)
+}
+
+function viz(tableName, selector, xAxis, yAxis, onLoad) {
+  getTableData(tableName, (data) => {
+    this.data = data;
+    this.filteredData = data;
+    this.svg = d3.select(selector);
+
+    this.height = this.svg.attr("height");
+    this.width = this.svg.attr("width");
+
+    this.xAxis = xAxis;
+    this.yAxis = yAxis;
+
+    onLoad();
+  });
+}
+
+viz.prototype.viewAsBubbleField = function () {
+  this.svg.selectAll("circle")
+    .data(
+      this.filteredData,
+      data => data[this.xAxis] + data[this.yAxis]
+    )
+    .enter()
+    .append("circle")
 }
