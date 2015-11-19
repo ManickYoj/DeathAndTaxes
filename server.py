@@ -13,6 +13,12 @@ DBCONN = sqlite3.connect(CONFIG["database"])
 AVAILABLE_TABLES = tables.SERVER_TABLES
 
 
+@route("/js/<filename>")
+def getJS(filename):
+    print(filename)
+    return static_file(filename, root="./js/")
+
+
 @route('/')
 def index():
     return static_file('index.html', root='./')
