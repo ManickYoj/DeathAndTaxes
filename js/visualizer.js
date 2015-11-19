@@ -5,7 +5,8 @@ const GLOBAL = {
 };
 
 function run () {
-  initializeView();
+  initializeView("#viz1");
+
   (function() {
   var apiCall = "/EducationAndCause39";
   $.get(apiCall)
@@ -29,8 +30,8 @@ function computeSizes (svg) {
     }
 }
 
-function initializeView () { 
-  const svg = d3.select("#viz");
+function initializeView (selector) { 
+  const svg = d3.select(selector);
   const s = computeSizes(svg);
 
   svg.append("text")
@@ -81,7 +82,7 @@ function initializeView () {
 }
 
 function setupOverview(){
-  const svg = d3.select("#viz");
+  const svg = d3.select("#viz1");
   const s = computeSizes(svg);
 
   svg.select("#loading")

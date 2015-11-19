@@ -109,3 +109,9 @@ mannerOfDeathHeaders = {
     "6": "Self Inflicted",
     "7": "Natural"
 }
+
+sex = {
+    "": "Not Specified",
+    "F": "Female",
+    "M": "Male"
+}
