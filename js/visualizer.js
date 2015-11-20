@@ -125,6 +125,7 @@ function updateView(data){
     .style("opacity", 0.6)
     .style("cursor", "pointer")
     .on("mouseover",function(d) { 
+      // TODO: hover-over effect bring circle "on-top"/"in-front" view
       var circSelect = d3.select(this);
       this.style.fill = "#696969"; 
       showToolTip(+circSelect.attr("cx")+circSelect.attr("r")/2,
