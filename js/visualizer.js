@@ -1,38 +1,12 @@
 $(run);
 
-const GLOBAL = {
-  data : [],
-  years : ["2003","2008", "2013"],
-  education : [
-    "Not Specified", 
-    "No formal education", 
-    "Years of elementary school", 
-    "1 Year of high school",
-    "2 Years of high school",
-    "3 Years of high school",
-    "4 Years of high school",
-    "1 Year of college",
-    "2 Years of college",
-    "3 Years of college",
-    "4 Years of college",
-    "5 or more years of college",
-    "Not Started"
-  ]
-};
-
 function run () {
-
   initializeView();
-  (function() {
-  var apiCall = "/EducationAndAge";
-  $.get(apiCall)
-    .done(function(data) {
-      GLOBAL.data = JSON.parse(data);
-    });
-  })();
-  setupData();
+  getData(function(data){
+    setupView();
+    updateView(data)
+  })
 }
-
 
 function computeSizes (svg) {
     const height = svg.attr("height");
@@ -92,20 +66,99 @@ function initializeView () {
   .text("LOADING...");
 }
 
-function setupData(){
-  getDataRows(2013);
+function setupView(){
+  const svg = d3.select("#eduAgeViz");
+  const s = computeSizes(svg);
+  var barWidth = s.chartWidth/(2*GLOBAL.education.length-1);
+
+  var sel = svg.selectAll("g")
+    .data(GLOBAL.education)
+    .enter()
+    .append("g")
+
+  sel.append("text")
+  .attr("class","value")
+  .attr("x",function(d,i) { return s.margin+(i*2)*barWidth+barWidth/2; })
+  .attr("y",s.height-s.margin)
+  .attr("dy","0.3em")
+  .style("fill","#696969")
+  .style("font-size", 12)
+  .style("text-anchor","middle")
+  .text(function(d) { return (d); });
+
 }
 
-// function setupOverview(){
-//   const svg = d3.select("#eduAgeViz");
-//   const s = computeSizes(svg);
+function updateView(data){
 
-//   svg.select("#loading")
-//   .text(null)
-// }
+  var svg = d3.select("#eduAgeViz");
+  var height = svg.attr("height");
+  var width = svg.attr("width");
+  var legendMargin = 10
+  var margin = 100;
 
-function getDataRows (year) {
-  return GLOBAL.data.filter(function(row){
-    return (row["Year"]===year)
+  const s = computeSizes(svg);
+  var barWidth = s.chartWidth/(2*GLOBAL.education.length-1);
+
+  console.log(data);
+
+  var sel = svg.selectAll("g")
+    .data(data)
+    .enter()
+    .append("g")
+
+  var y = d3.scale.linear()
+      .domain ([0, 100])
+      .range([s.margin, s.height - s.margin]);
+
+  var x = d3.scale.linear()
+      .domain ([0, 12])
+      .range([s.margin+(0*2)*barWidth+barWidth/2, s.margin+(12*2)*barWidth+barWidth/2]);
+
+  svg.selectAll("scatter-dots")
+    .data(data)
+    .enter().append("circle")
+      .attr("cx", function (d) {return x(GLOBAL.education.indexOf(d["Education"])); } )
+      .attr("cy", function (d) { return y(d["Age (Years)"]); } )
+      .attr("r", function(d){ return d["Number in Group"]/500; })
+      .style("opacity", 0.6);
+}
+
+
+var GLOBAL = {
+  data : [],
+  years : ["2003","2008", "2013"],
+  education : [
+    "Not Specified", 
+    "No formal education", 
+    "Years of elementary school", 
+    "1 Year of high school",
+    "2 Years of high school",
+    "3 Years of high school",
+    "4 Years of high school",
+    "1 Year of college",
+    "2 Years of college",
+    "3 Years of college",
+    "4 Years of college",
+    "5 or more years of college",
+    "Not Started"
+  ]
+};
+
+
+function getData (f) {
+  d3.json("/EducationAndAge", function(error,data) {
+     if (error) {
+         console.log(error);
+     } else {
+         d3.select("#loading").remove();
+         GLOBAL.data = data;
+         f(data);
+     }
+  });
+}
+
+function getDataRows (data, parameter, value) {
+  return data.filter(function(row){
+    return (row[parameter]===value)
   })
 }
