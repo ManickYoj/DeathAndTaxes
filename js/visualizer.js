@@ -28,20 +28,7 @@ function computeSizes (svg) {
 function initializeView () { 
   const svg = d3.select("#eduAgeViz");
   const s = computeSizes(svg);
-
-  // title of graph
-  svg.append("text")
-  .attr({
-    id: "title",
-    x: s.width/2,
-    y: s.margin/3,
-    dy: "0.3em",
-  })
-  .style({
-    "text-anchor": "middle",
-  })
-  .text("Education Level vs. Age of Death");
-
+  
   // what year
   svg.append("text")
   .attr({
@@ -53,6 +40,7 @@ function initializeView () {
   .style({
     "text-anchor": "middle"
   })
+  .text("Data from Years 2003, 2008, 2013")
 
   // loading placeholder
   svg.append("text")
@@ -74,10 +62,6 @@ function setupView(){
   const svg = d3.select("#eduAgeViz");
   const s = computeSizes(svg);
   var barWidth = s.chartWidth/(2*GLOBAL.education.length-1);
-
-  // var y = d3.scale.linear()
-  //       .domain([0, d3.max(GLOBAL.ageStamps, function(d) { return d; })])
-  //       .range([ s.height, 0 ]);
 
   var sel = svg.selectAll("g")
     .data(GLOBAL.education)
@@ -102,8 +86,7 @@ function updateView(data){
   const s = computeSizes(svg);
   var barWidth = s.chartWidth/(2*GLOBAL.education.length-1);
 
-  var sel = svg.selectAll("g")
-    .data(data)
+  var sel = svg.data(data)
     .enter()
     .append("g")
 
@@ -122,7 +105,7 @@ function updateView(data){
     .attr("cx", function (d) {return x(GLOBAL.education.indexOf(d["Education"])); } )
     .attr("cy", function (d) { return y(d["Age (Years)"]); } )
     .attr("r", function(d){ return d["Number in Group"]/500; })
-    .style("opacity", 0.6)
+    .style("opacity", 0.2)
     .style("cursor", "pointer")
     .on("mouseover",function(d) { 
       // TODO: hover-over effect bring circle "on-top"/"in-front" view
@@ -178,7 +161,7 @@ function updateViewFromButton(year){
       .attr("cx", function (d) {return x(GLOBAL.education.indexOf(d["Education"])); } )
       .attr("cy", function (d) { return y(d["Age (Years)"]); } )
       .attr("r", function(d){ return d["Number in Group"]/500; })
-      .style("opacity", 0.6)
+      .style("opacity", 0.2)
       .style("cursor", "pointer")
       .on("mouseover",function(d) { 
         var circSelect = d3.select(this);
@@ -244,7 +227,7 @@ function showToolTip (cx,cy,year,numDead, education, age) {
     .style("text-anchor","middle")
     .text(year);
 
-    // # dead
+    // dead
   svg.append("text")
     .attr("class","tooltip")
     .attr("x",cx)
