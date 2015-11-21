@@ -8,17 +8,32 @@
 
 		<script src="js/d3.min.js" charset="utf-8"></script>
 		<script src="js/babel.min.js" charset="utf-8"></script>
+		<script src="js/_.min.js" charset="utf-8"></script>
 		<script
 			type="text/javascript"
 			src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js">
 		</script>
+		<style type="text/css">
+		.centeredSvg {
+			display: block;
+			margin: auto;
+		}
+		</style>
 	</head>
 	<body>
+		<center>
+			<p>Education Level vs. Age of Death</p>
+			<button id="button_2003" type="submit">2003</button>
+			<button id="button_2008" type="submit">2008</button>
+			<button id="button_2013" type="submit">2013</button>
+
+		</center>
 
 		<div>
-			<svg id="viz1" height="500" width="1000" class="centeredSvg"></svg>
-			<svg id="viz2" height="500" width="1000" class="centeredSvg"></svg>
+			<svg id="eduAgeViz" height="1000" width="2000" class="centeredSvg"></svg>
+			<svg id="eduCauseViz" height="1000" width="2000" class="centeredSvg"></svg>
 		</div>
+
 
 		<script type="text/babel" src="js/visualizer.js"></script>
 
