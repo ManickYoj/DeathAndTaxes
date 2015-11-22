@@ -7,6 +7,7 @@ function run () {
 
   initializeView();
   getData("/EducationAndAge", (data) => {
+    GLOBAL.data = data;
     setupView();
     updateView(data)
   });
@@ -16,18 +17,18 @@ function run () {
 
     // Group specific cause of death into categories
     // EG. All malignant neoplasm deaths -> Cancer
-    eduCauseData.addPipe((data) => {
-      return relabelData(data, "Cause of Death", GROUPINGS["Cause of Death"]);
+    eduCauseData.addPipe((rawData) => {
+      return relabelData(rawData, "Cause of Death", GROUPINGS["Cause of Death"]);
     });
 
     // Group educational attainments
-    eduCauseData.addPipe((data) => {
-      return relabelData(data, "Education", GROUPINGS["Education"]);
+    eduCauseData.addPipe((rawData) => {
+      return relabelData(rawData, "Education", GROUPINGS["Education"]);
     });
 
     // Filter out all Not Specified values (for any key)
-    eduCauseData.addPipe((data) => {
-      return _.reject(data, datum => _.contains(datum, "Not Specified"));
+    eduCauseData.addPipe((rawData) => {
+      return _.reject(rawData, datum => _.contains(datum, "Not Specified"));
     });
 
     // Construct a matrix from the data
@@ -125,6 +126,9 @@ function setupView(){
 
 function updateView(data){
 
+  // Group elementary school to free up space in viz
+  data = relabelData(data, "Education", GROUPINGS["Primary Education"]);
+
   var svg = d3.select("#eduAgeViz");
   const s = computeSizes(svg);
   var barWidth = s.chartWidth/(2*GLOBAL.education.length-1);
@@ -160,7 +164,7 @@ function updateView(data){
       tooltip.transition()
          .duration(200)
          .style("opacity", .9)
-         .style("background-color","#696969")
+         .style("background-color","#EEE")
          .style("fill", "none")
          .style("stroke", "#fff")
          .style("stroke-width", 6)
@@ -183,7 +187,9 @@ function updateView(data){
 }
 
 function updateViewFromButton(year){
-  var filteredData = getDataRows(GLOBAL.data, "Year", year);  
+  var filteredData = getDataRows(GLOBAL.data, "Year", year);
+  filteredData = relabelData(filteredData, "Education", GROUPINGS["Primary Education"]);
+
   var svg = d3.select("#eduAgeViz");
   const s = computeSizes(svg);
   var barWidth = s.chartWidth/(2*GLOBAL.education.length-1);
@@ -223,9 +229,9 @@ function updateViewFromButton(year){
   svg.selectAll("scatter-dots")
     .data(filteredData)
     .enter().append("circle")
-      .attr("cx", function (d) {return x(GLOBAL.education.indexOf(d["Education"])); } )
-      .attr("cy", function (d) { return y(d["Age (Years)"]); } )
-      .attr("r", function(d){ return d["Number in Group"]/500; })
+      .attr("cx", (d) => x(GLOBAL.education.indexOf(d["Education"])))
+      .attr("cy", (d) => y(d["Age (Years)"]))
+      .attr("r", (d) => d["Number in Group"]/500)
       .style("opacity", 0.2)
       .style("cursor", "pointer")
       .on("mouseover",function(d) { 
@@ -263,7 +269,7 @@ var GLOBAL = {
   education : [
     "Not Specified", 
     "No Formal Education", 
-    "Years of Elementary School", 
+    "Some Elementary School",
     "1 Year of High School",
     "2 Years of High School",
     "3 Years of High School",
@@ -341,7 +347,6 @@ function getData (endpoint, f) {
          console.log(error);
      } else {
          d3.select("#loading").remove();
-         GLOBAL.data = data;
          f(data);
      }
   });
@@ -363,7 +368,8 @@ Data.prototype.addPipe = function(pipe) {
 }
 
 Data.prototype.runPipeline = function () {
-  let transformedData = this.rawData;
+  // Deep copy the rawData
+  let transformedData = JSON.parse(JSON.stringify(this.rawData));
 
   this.pipeline.forEach((pipe) => {
     transformedData = pipe(transformedData);
@@ -398,6 +404,19 @@ const GROUPINGS = {
       "Cerebrovascular Diseases",
       "Atherosclerosis",
       "Other Diseases of Circulatory System",
+    ],
+  },
+
+  "Primary Education": {
+    "Some Elementary School" : [
+      "1 Years of Elementary School",
+      "2 Years of Elementary School",
+      "3 Years of Elementary School",
+      "4 Years of Elementary School",
+      "5 Years of Elementary School",
+      "6 Years of Elementary School",
+      "7 Years of Elementary School",
+      "8 Years of Elementary School",
     ],
   },
 
@@ -647,35 +666,31 @@ Matrix.prototype.bubbleView = function (selector) {
           "fill": "rgb(85, 85, 85)",
         })
         .on("mouseover", (e) => {
-        //   let body = d3.select("body");
-        //   body.select(".tooltip").remove();
-        //   body.append("div")
-        //     .attr("class", "tooltip")
-        //     .style("opacity", 0);
-        //     .class({
-        //       : e.clientX;
-        // y=e.clientY;
-        //     })
-        //   this.style.fill = "#696969"; 
-        const tooltip = d3.select(".tooltip")
-      tooltip.transition()
-         .duration(200)
-         .style("opacity", .9)
-         .style("background-color","#696969")
-         .style("fill", "none")
-         .style("stroke", "#fff")
-         .style("stroke-width", 6)
-         .style("border-radius", "10")
-         .style("padding", "10");
-         const d = this.matrix[rowIndex][colIndex];
-          // content
-          tooltip.html(
-            `<center> ${d.colLabel} <br/>
-             ${(d.size * 100).toFixed(1)}% of Deaths of Persons <br/>
-             with Highest Educational Status </br>
-             ${d.rowLabel} </center>`)
-           .style("left", (d3.event.pageX + 5) + "px")
-           .style("top", (d3.event.pageY - 28) + "px");
+          const tooltip = d3.select(".tooltip")
+          tooltip.transition()
+           .duration(200)
+           .style("opacity", .9)
+           .style("background-color","#EEE")
+           .style("fill", "none")
+           .style("stroke", "#fff")
+           .style("stroke-width", 6)
+           .style("border-radius", "10")
+           .style("padding", "10");
+           const d = this.matrix[rowIndex][colIndex];
+            // content
+            tooltip.html(
+              `<center> ${d.colLabel} <br/>
+               ${(d.size * 100).toFixed(1)}% of Deaths of Persons <br/>
+               with Highest Educational Status </br>
+               ${d.rowLabel} </center>`)
+             .style("left", (d3.event.pageX + 5) + "px")
+             .style("top", (d3.event.pageY - 28) + "px");
+
+        }).on("mouseout", () => {
+          d3.select(".tooltip")
+            .transition()
+            .duration(500)
+            .style("opacity", 0);
         });
     });
   });
