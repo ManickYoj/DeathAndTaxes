@@ -18,12 +18,10 @@ If, for whatever reason, you need to set up the warehouse database, copy the dat
 
 
 ### How the Code Fits Together
-Backend:
 - `makedb.py`: Takes raw data files and maps them into `mortality.db`
 
 - `warehouse.py`: Takes operational data from `mortality.db` and collates it into `warehouse.db` based on parameters in `tables.py`. Also replaces the operational data's numeric coding with readable names using maps in `datamappings.py`
 
 -`server.py`: Runs the server, reading data from `warehouse.db` and also some information about available tables from `tables.py`. Serves `index.html`
 
-Front End:
 -`index.html`: Requests all contents of the `\js\` directory for use on the front-end
