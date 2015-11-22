@@ -23,10 +23,20 @@ function run () {
       return relabelData(rawData, "Cause of Death", GROUPINGS["Cause of Death"]);
     });
 
+
     // Group educational attainments
-    eduCauseData.addPipe((rawData) => {
-      return relabelData(rawData, "Education", GROUPINGS["Education"]);
+    eduCauseData.addNamedPipe("Elementary", (rawData) => {
+      return relabelData(rawData, "Education", GROUPINGS["Elementary Education"]);
     });
+
+    eduCauseData.addNamedPipe("High School", (rawData) => {
+      return relabelData(rawData, "Education", GROUPINGS["High School Education"]);
+    });
+
+    eduCauseData.addNamedPipe("College", (rawData) => {
+      return relabelData(rawData, "Education", GROUPINGS["College Education"]);
+    });
+
 
     // Filter out all Not Specified values (for any key)
     eduCauseData.addPipe((rawData) => {
@@ -48,7 +58,7 @@ function run () {
 
     // Handle year switching
     $('input[name=yearselect]').change((e) => {
-      const year = event.target.value
+      const year = event.target.value;
 
       if (year === "all") {
         eduCauseData.removeNamedPipe("year");
@@ -67,7 +77,31 @@ function run () {
       );
       eduCauseMatrix.normalizeByRow();
       eduCauseMatrix.bubbleView("#eduCauseViz");
-    })
+    });
+
+    // Handle Education Drilldown
+    $('input[name=educationselect]').change((e) => {
+      const pipeName = event.target.value;
+      const addPipe = !event.target.checked;
+
+      if (!addPipe) {
+        eduCauseData.removeNamedPipe(pipeName);
+      }
+      else {
+        eduCauseData.addNamedPipe(pipeName, (rawData) => {
+          return relabelData(rawData, "Education", GROUPINGS[pipeName + " Education"]);
+        });
+      }
+
+      // Regenerate Matrix & Viz
+      eduCauseMatrix = new Matrix(
+        eduCauseData.runPipeline(),
+        "Education",
+        "Cause of Death"
+      );
+      eduCauseMatrix.normalizeByRow();
+      eduCauseMatrix.bubbleView("#eduCauseViz");
+    });
   });
 }
 
@@ -152,7 +186,7 @@ function setupView(){
 function updateView(data){
 
   // Group elementary school to free up space in viz
-  data = relabelData(data, "Education", GROUPINGS["Primary Education"]);
+  data = relabelData(data, "Education", GROUPINGS["Elementary Education"]);
 
   var svg = d3.select("#eduAgeViz");
   const s = computeSizes(svg);
@@ -445,8 +479,8 @@ const GROUPINGS = {
     ],
   },
 
-  "Primary Education": {
-    "Some Elementary School" : [
+  "Elementary Education": {
+    "Elementary School (1-8)" : [
       "1 Years of Elementary School",
       "2 Years of Elementary School",
       "3 Years of Elementary School",
@@ -458,8 +492,26 @@ const GROUPINGS = {
     ],
   },
 
+  "High School Education" : {
+    "High School (9-12)": [
+      "1 Year of High School",
+      "2 Years of High School",
+      "3 Years of High School",
+      "4 Years of High School",
+    ],
+  },
+
+  "College Education": {
+    "College": [
+      "1 Year of College",
+      "2 Years of College",
+      "3 Years of College",
+      "4 Years of College",
+    ],
+  },
+
   "Education": {
-    "Elementary and Middle School" : [
+    "Elementary School (1-8)" : [
       "1 Years of Elementary School",
       "2 Years of Elementary School",
       "3 Years of Elementary School",
@@ -470,7 +522,7 @@ const GROUPINGS = {
       "8 Years of Elementary School",
     ],
 
-    "High School": [
+    "High School (9-12)": [
       "1 Year of High School",
       "2 Years of High School",
       "3 Years of High School",
