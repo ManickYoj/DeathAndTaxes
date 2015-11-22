@@ -17,20 +17,33 @@ function run () {
   getData("/EducationAndCause39", (d) => {
     const eduCauseData = new Data(d);
 
-    // Group specific cause of death into categories
-    // EG. All malignant neoplasm deaths -> Cancer
-    eduCauseData.addPipe((rawData) => {
-      return relabelData(rawData, "Cause of Death", GROUPINGS["Cause of Death"]);
-    });
-
-    // Group educational attainments
-    eduCauseData.addPipe((rawData) => {
-      return relabelData(rawData, "Education", GROUPINGS["Education"]);
-    });
-
     // Filter out all Not Specified values (for any key)
     eduCauseData.addPipe((rawData) => {
       return _.reject(rawData, datum => _.contains(datum, "Not Specified"));
+    });
+
+    // Group specific cause of death into categories
+    // EG. All malignant neoplasm deaths -> Cancer
+    eduCauseData.addNamedPipe("Cancer", (rawData) => {
+      return relabelData(rawData, "Cause of Death", GROUPINGS["Cause - Cancer"]);
+    });
+
+    eduCauseData.addNamedPipe("Cardiovascular", (rawData) => {
+      return relabelData(rawData, "Cause of Death", GROUPINGS["Cause - Cardiovascular"]);
+    });
+
+
+    // Group educational attainments
+    eduCauseData.addNamedPipe("Elementary", (rawData) => {
+      return relabelData(rawData, "Education", GROUPINGS["Education - Elementary"]);
+    });
+
+    eduCauseData.addNamedPipe("High School", (rawData) => {
+      return relabelData(rawData, "Education", GROUPINGS["Education - High School"]);
+    });
+
+    eduCauseData.addNamedPipe("College", (rawData) => {
+      return relabelData(rawData, "Education", GROUPINGS["College Education"]);
     });
 
     // Construct a matrix from the data
@@ -48,11 +61,9 @@ function run () {
 
     // Handle year switching
     $('input[name=yearselect]').change((e) => {
-      const year = event.target.value
+      const year = event.target.value;
 
-      if (year === "all") {
-        eduCauseData.removeNamedPipe("year");
-      }
+      if (year === "all") eduCauseData.removeNamedPipe("year");
       else {
         eduCauseData.addNamedPipe("year", (rawData) => {
           return _.filter(rawData, datum => datum.Year === parseInt(year));
@@ -60,15 +71,51 @@ function run () {
       }
 
       // Regenerate Matrix & Viz
-      eduCauseMatrix = new Matrix(
-        eduCauseData.runPipeline(),
-        "Education",
-        "Cause of Death"
-      );
-      eduCauseMatrix.normalizeByRow();
-      eduCauseMatrix.bubbleView("#eduCauseViz");
-    })
+      regenerateVizTwo(eduCauseData.runPipeline());
+    });
+
+    // Handle Cause Drilldown
+    $('input[name=causeselect]').change((e) => {
+      const pipeName = event.target.value;
+      const addPipe = !event.target.checked;
+
+      if (!addPipe) eduCauseData.removeNamedPipe(pipeName);
+      else {
+        eduCauseData.addNamedPipe(pipeName, (rawData) => {
+          return relabelData(rawData, "Cause of Death", GROUPINGS["Cause - " + pipeName]);
+        });
+      }
+
+      // Regenerate Matrix & Viz
+      regenerateVizTwo(eduCauseData.runPipeline());
+    });
+
+    // Handle Education Drilldown
+    $('input[name=educationselect]').change((e) => {
+      const pipeName = event.target.value;
+      const addPipe = !event.target.checked;
+
+      if (!addPipe) eduCauseData.removeNamedPipe(pipeName);
+      else {
+        eduCauseData.addNamedPipe(pipeName, (rawData) => {
+          return relabelData(rawData, "Education", GROUPINGS["Education - " + pipeName]);
+        });
+      }
+
+      // Regenerate Matrix & Viz
+      regenerateVizTwo(eduCauseData.runPipeline());
+    });
   });
+}
+
+function regenerateVizTwo(data) {
+  const viz2 = new Matrix(
+    data,
+    "Education",
+    "Cause of Death"
+  );
+  viz2.normalizeByRow();
+  viz2.bubbleView("#eduCauseViz");
 }
 
 function computeSizes (svg) {
@@ -152,7 +199,7 @@ function setupView(){
 function updateView(data){
 
   // Group elementary school to free up space in viz
-  data = relabelData(data, "Education", GROUPINGS["Primary Education"]);
+  data = relabelData(data, "Education", GROUPINGS["Elementary Education"]);
 
   var svg = d3.select("#eduAgeViz");
   const s = computeSizes(svg);
@@ -416,76 +463,6 @@ Data.prototype.runPipeline = function () {
   return transformedData;
 }
 
-const GROUPINGS = {
-  "Cause of Death": {
-    "Cancer": [
-      "Malignant Neoplasm Unspecified",
-      "Malignant Neoplasm of Stomach",
-      "Malignant Neoplasm of Colon or Rectum or Anus",
-      "Malignant Neoplasm of Pancreas",
-      "Malignant Neoplasm of Trachea or Bronchus or Lung",
-      "Malignant Neoplasm of Breast",
-      "Malignant Neoplasm of Cervix or Uteri or Corpus Uteri or Ovary",
-      "Malignant Neoplasm of Prostate",
-      "Malignant Neoplasm of Urinary Tract",
-      "Non Hodgkins Lymphoma",
-      "Leukemia",
-      "Other Malignant Neoplasms",
-    ],
-
-    "Cardiovascular Disease": [
-      "Diseases of Heart",
-      "Hypertensive Heart Disease with or without Renal Disease",
-      "Ischemic Heart Diseases",
-      "Other Diseases of Heart",
-      "Essential Primary Hypertension or Hypertensive Renal Disease",
-      "Cerebrovascular Diseases",
-      "Atherosclerosis",
-      "Other Diseases of Circulatory System",
-    ],
-  },
-
-  "Primary Education": {
-    "Some Elementary School" : [
-      "1 Years of Elementary School",
-      "2 Years of Elementary School",
-      "3 Years of Elementary School",
-      "4 Years of Elementary School",
-      "5 Years of Elementary School",
-      "6 Years of Elementary School",
-      "7 Years of Elementary School",
-      "8 Years of Elementary School",
-    ],
-  },
-
-  "Education": {
-    "Elementary and Middle School" : [
-      "1 Years of Elementary School",
-      "2 Years of Elementary School",
-      "3 Years of Elementary School",
-      "4 Years of Elementary School",
-      "5 Years of Elementary School",
-      "6 Years of Elementary School",
-      "7 Years of Elementary School",
-      "8 Years of Elementary School",
-    ],
-
-    "High School": [
-      "1 Year of High School",
-      "2 Years of High School",
-      "3 Years of High School",
-      "4 Years of High School",
-    ],
-
-    "College": [
-      "1 Year of College",
-      "2 Years of College",
-      "3 Years of College",
-      "4 Years of College",
-    ],
-  }
-}
-
 function relabelData(data, key, grouping={}) {
   return data.map((datum) => {
     _.each(grouping, (membersOfGroup, groupName) => {
@@ -620,11 +597,12 @@ Matrix.prototype.bubbleView = function (selector) {
   // Define View Variables
   const root = d3.select(selector);
   root.selectAll("*").remove();
+  const SVG_PADDING = 50;
 
-  const width = parseInt(root.style("width"));
-  const height = parseInt(root.style("height"));
+  const width = parseInt(root.style("width")) - SVG_PADDING;
+  const height = parseInt(root.style("height")) - SVG_PADDING;
 
-  const MARGIN_INDICIES = 3;
+  const MARGIN_INDICIES = 4;
   const elemWidth = width / (this.colLabels.length + MARGIN_INDICIES);
   const elemHeight = height / (this.rowLabels.length + MARGIN_INDICIES);
   const maxRadius = Math.min(elemWidth, elemHeight);
@@ -664,7 +642,7 @@ Matrix.prototype.bubbleView = function (selector) {
   // Position and Create Column Labels
   const colLabels = root.append("g");
   this.colLabels.forEach((label, index) => {
-    let x = elemWidth * (MARGIN_INDICIES + index);
+    let x = elemWidth * (MARGIN_INDICIES + index) + SVG_PADDING/2;
     let y = elemHeight * (this.rowLabels.length) + maxRadius;
 
     colLabels.append("text")
@@ -700,7 +678,7 @@ Matrix.prototype.bubbleView = function (selector) {
     this.colLabels.forEach((c, colIndex) => {
       circles.append("circle")
         .attr({
-          cx: elemWidth * (colIndex + MARGIN_INDICIES),
+          cx: elemWidth * (colIndex + MARGIN_INDICIES) + SVG_PADDING/2,
           cy: elemHeight * (rowIndex) + maxRadius,
           r: Math.sqrt(this.matrix[rowIndex][colIndex].size / Math.PI) * maxRadius,
           "fill": "rgb(85, 85, 85)",
@@ -734,4 +712,122 @@ Matrix.prototype.bubbleView = function (selector) {
         });
     });
   });
+}
+
+const GROUPINGS = {
+  "Cause of Death": {
+    "Cancer": [
+      "Malignant Neoplasm Unspecified",
+      "Malignant Neoplasm of Stomach",
+      "Malignant Neoplasm of Colon or Rectum or Anus",
+      "Malignant Neoplasm of Pancreas",
+      "Malignant Neoplasm of Trachea or Bronchus or Lung",
+      "Malignant Neoplasm of Breast",
+      "Malignant Neoplasm of Cervix or Uteri or Corpus Uteri or Ovary",
+      "Malignant Neoplasm of Prostate",
+      "Malignant Neoplasm of Urinary Tract",
+      "Non Hodgkins Lymphoma",
+      "Leukemia",
+      "Other Malignant Neoplasms",
+    ],
+
+    "Cardiovascular Disease": [
+      "Diseases of Heart",
+      "Hypertensive Heart Disease with or without Renal Disease",
+      "Ischemic Heart Diseases",
+      "Other Diseases of Heart",
+      "Essential Primary Hypertension or Hypertensive Renal Disease",
+      "Cerebrovascular Diseases",
+      "Atherosclerosis",
+      "Other Diseases of Circulatory System",
+    ],
+  },
+
+  "Cause - Cancer": {
+    "Cancer": [
+      "Malignant Neoplasm Unspecified",
+      "Malignant Neoplasm of Stomach",
+      "Malignant Neoplasm of Colon or Rectum or Anus",
+      "Malignant Neoplasm of Pancreas",
+      "Malignant Neoplasm of Trachea or Bronchus or Lung",
+      "Malignant Neoplasm of Breast",
+      "Malignant Neoplasm of Cervix or Uteri or Corpus Uteri or Ovary",
+      "Malignant Neoplasm of Prostate",
+      "Malignant Neoplasm of Urinary Tract",
+      "Non Hodgkins Lymphoma",
+      "Leukemia",
+      "Other Malignant Neoplasms",
+    ],
+  },
+
+  "Cause - Cardiovascular": {
+    "Cardiovascular Disease": [
+      "Diseases of Heart",
+      "Hypertensive Heart Disease with or without Renal Disease",
+      "Ischemic Heart Diseases",
+      "Other Diseases of Heart",
+      "Essential Primary Hypertension or Hypertensive Renal Disease",
+      "Cerebrovascular Diseases",
+      "Atherosclerosis",
+      "Other Diseases of Circulatory System",
+    ],
+  },
+
+  "Education - Elementary": {
+    "Elementary School (1-8)" : [
+      "1 Years of Elementary School",
+      "2 Years of Elementary School",
+      "3 Years of Elementary School",
+      "4 Years of Elementary School",
+      "5 Years of Elementary School",
+      "6 Years of Elementary School",
+      "7 Years of Elementary School",
+      "8 Years of Elementary School",
+    ],
+  },
+
+  "Education - High School" : {
+    "High School (9-12)": [
+      "1 Year of High School",
+      "2 Years of High School",
+      "3 Years of High School",
+      "4 Years of High School",
+    ],
+  },
+
+  "Education - College": {
+    "College": [
+      "1 Year of College",
+      "2 Years of College",
+      "3 Years of College",
+      "4 Years of College",
+    ],
+  },
+
+  "Education": {
+    "Elementary School (1-8)" : [
+      "1 Years of Elementary School",
+      "2 Years of Elementary School",
+      "3 Years of Elementary School",
+      "4 Years of Elementary School",
+      "5 Years of Elementary School",
+      "6 Years of Elementary School",
+      "7 Years of Elementary School",
+      "8 Years of Elementary School",
+    ],
+
+    "High School (9-12)": [
+      "1 Year of High School",
+      "2 Years of High School",
+      "3 Years of High School",
+      "4 Years of High School",
+    ],
+
+    "College": [
+      "1 Year of College",
+      "2 Years of College",
+      "3 Years of College",
+      "4 Years of College",
+    ],
+  }
 }

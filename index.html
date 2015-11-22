@@ -65,9 +65,10 @@
 							death. Mouse over any bubble for details.
 						</p>
 					</div>
-					<div class="col-md-4 col-md-offset-2">
+					<div class="col-md-6">
 						<h3><small>Controls</small></h3>
 						<p>
+							<!-- Year Selection -->
 							<label style="margin-right: 10px;">Year: </label>
 							<label class="radio-inline">
 								<input type="radio" value="2003" name="yearselect">2003</label>
@@ -77,11 +78,40 @@
 								<input type="radio" value="2013" name="yearselect">2013</label>
 							<label class="radio-inline">
 								<input type="radio" value="all" name="yearselect" checked>All Years</label>
+							<br/>
+
+							<!-- Education Drilldown -->
+							<label style="margin-right: 10px;">Education Drilldown: </label>
+							<label class="checkbox-inline">
+								<input type="checkbox" value="Elementary" name="educationselect">
+								Elementary (1-8)
+							</label>
+							<label class="checkbox-inline">
+								<input type="checkbox" value="High School" name="educationselect">
+								High School (9-12)
+							</label>
+							<label class="checkbox-inline">
+								<input type="checkbox" value="College" name="educationselect">
+								College
+							</label>
+							<br/>
+
+							<!-- Cause Drilldown -->
+							<label style="margin-right: 10px;">Cause Drilldown: </label>
+							<label class="checkbox-inline">
+								<input type="checkbox" value="Cancer" name="causeselect">
+								Cancer
+							</label>
+							<label class="checkbox-inline">
+								<input type="checkbox" value="Cardiovascular" name="causeselect">
+								Cardiovascular Issues
+							</label>
+							<br/>
 						</p>
 					</div>
 				</div>
 			</div>
-			<svg id="eduCauseViz" height="700" width="1500" class="centeredSvg"></svg>
+			<svg id="eduCauseViz" height="800" width="1500" class="centeredSvg"></svg>
 		</div>
 
 
