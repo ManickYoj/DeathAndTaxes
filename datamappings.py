@@ -33,7 +33,7 @@ causeRecode39Headers = {
     "31": "Nephritis or Nephrotic Syndrome or Nephrosis",
     "32": "Pregnancy or Childbirth or the Puerperium",
     "33": "Certain Conditions Originating in the Perinatal Period",
-    "34": "Congenital Malformations or Deformations or and " +
+    "34": "Congenital Malformations, Deformations, or " +
           "Chromosomal Abnormalities",
     "35": "Sudden Infant Death Syndrome",
     "36": "Unclassified Symptoms or Signs",

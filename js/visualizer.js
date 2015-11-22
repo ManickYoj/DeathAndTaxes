@@ -5,11 +5,11 @@ function run () {
   button_2008.addEventListener("click",function() { updateViewFromButton(2008); });
   button_2013.addEventListener("click",function() { updateViewFromButton(2013); });
 
-  // initializeView();
-  // getData("/EducationAndAge", (data) => {
-  //   setupView();
-  //   updateView(data)
-  // });
+  initializeView();
+  getData("/EducationAndAge", (data) => {
+    setupView();
+    updateView(data)
+  });
 
   getData("/EducationAndCause39", (d) => {
     const eduCauseData = new Data(d);
@@ -18,6 +18,11 @@ function run () {
     // EG. All malignant neoplasm deaths -> Cancer
     eduCauseData.addPipe((data) => {
       return relabelData(data, "Cause of Death", GROUPINGS["Cause of Death"]);
+    });
+
+    // Group educational attainments
+    eduCauseData.addPipe((data) => {
+      return relabelData(data, "Education", GROUPINGS["Education"]);
     });
 
     // Filter out all Not Specified values (for any key)
@@ -352,6 +357,33 @@ const GROUPINGS = {
       "Other Diseases of Circulatory System",
     ],
   },
+
+  "Education": {
+    "Elementary and Middle School" : [
+      "1 Years of elementary school",
+      "2 Years of elementary school",
+      "3 Years of elementary school",
+      "4 Years of elementary school",
+      "5 Years of elementary school",
+      "6 Years of elementary school",
+      "7 Years of elementary school",
+      "8 Years of elementary school",
+    ],
+
+    "High School": [
+      "1 Year of high school",
+      "2 Years of high school",
+      "3 Years of high school",
+      "4 Years of high school",
+    ],
+
+    "College": [
+      "1 Year of college",
+      "2 Years of college",
+      "3 Years of college",
+      "4 Years of college",
+    ],
+  }
 }
 
 function relabelData(data, key, grouping={}) {
@@ -490,7 +522,7 @@ Matrix.prototype.bubbleView = function (selector) {
   const width = parseInt(root.style("width"));
   const height = parseInt(root.style("height"));
 
-  const MARGIN_INDICIES = 5;
+  const MARGIN_INDICIES = 3;
   const elemWidth = width / (this.colLabels.length + MARGIN_INDICIES);
   const elemHeight = height / (this.rowLabels.length + MARGIN_INDICIES);
   const maxRadius = Math.min(elemWidth, elemHeight);
@@ -499,33 +531,32 @@ Matrix.prototype.bubbleView = function (selector) {
   const rowLabels = root.append("g");
   this.rowLabels.forEach((label, index) => {
     let x = 10;
-    let y = elemHeight * (MARGIN_INDICIES + index);
+    let y = elemHeight * (index) + maxRadius;
 
     rowLabels.append("text")
       .text(label)
       .attr({
         x,
         y,
-        
       })
       .style({
-        width: `${elemWidth * (MARGIN_INDICIES)}px`,
+        width: `${elemWidth * (MARGIN_INDICIES)}px`,  // Its not very effective.
         "text-overflow": "ellipsis",
-      })
+      });
   });
 
   // Position and Create Column Labels
   const colLabels = root.append("g");
   this.colLabels.forEach((label, index) => {
     let x = elemWidth * (MARGIN_INDICIES + index);
-    let y = elemHeight * (MARGIN_INDICIES) - 20;
+    let y = elemHeight * (this.rowLabels.length) + maxRadius;
 
     colLabels.append("text")
       .text(label)
       .attr({
         x,
         y,
-        "transform": `rotate(-30 ${x} ${y})`,
+        "transform": `rotate(30 ${x} ${y})`,
       });
   });
 
@@ -536,7 +567,7 @@ Matrix.prototype.bubbleView = function (selector) {
       circles.append("circle")
         .attr({
           cx: elemWidth * (colIndex + MARGIN_INDICIES),
-          cy: elemHeight * (rowIndex + MARGIN_INDICIES),
+          cy: elemHeight * (rowIndex) + maxRadius,
           r: Math.sqrt(this.matrix[rowIndex][colIndex].size / Math.PI) * maxRadius,
           "fill-opacity": 0.9,
           "stroke": "1px",

@@ -21,19 +21,37 @@
 		</style>
 	</head>
 	<body>
-		<center>
-			<p>Education Level vs. Age of Death</p>
-			<button id="button_2003" type="submit">2003</button>
-			<button id="button_2008" type="submit">2008</button>
-			<button id="button_2013" type="submit">2013</button>
-
-		</center>
-
-		<div>
-			<svg id="eduAgeViz" height="1000" width="2000" class="centeredSvg"></svg>
-			<div id="eduCauseIntro">
-				<svg id="eduCauseViz" width="100%" height="100%" class="centeredSvg"></svg>
+		<nav class="navbar navbar-default">
+			<div class="container-fluid">
+				<button
+					class="btn btn-default navbar-btn"
+					onclick="$('#viz2').hide(); $('#viz1').show();"
+				>
+					Age of Death by Educational Attainment
+				</button>
+				<button
+					class="btn btn-default navbar-btn"
+					onclick="$('#viz1').hide(); $('#viz2').show();"
+				>
+					Cause of Death by Educational Attainment
+				</button>
 			</div>
+		</nav>
+		
+
+		<div id="viz1">
+			<center>
+					<p>Education Level vs. Age of Death</p>
+					<button id="button_2003" type="submit">2003</button>
+					<button id="button_2008" type="submit">2008</button>
+					<button id="button_2013" type="submit">2013</button>
+
+			</center>
+			<svg id="eduAgeViz" height="1000" width="2000" class="centeredSvg"></svg>
+		</div>
+
+		<div id="viz2" style="display: none">
+			<svg id="eduCauseViz" height="1000" width="2000" class="centeredSvg"></svg>
 		</div>
 
 
