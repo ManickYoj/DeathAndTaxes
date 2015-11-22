@@ -63,6 +63,7 @@ function setupView(){
   const s = computeSizes(svg);
   var barWidth = s.chartWidth/(2*GLOBAL.education.length-1);
 
+
   // var yearsScale = d3.scale.ordinal()
   //     .domain(GLOBAL.ageStamps)
   //     .rangeBands([s.height - s.margin, s.margin]);
@@ -107,6 +108,10 @@ function updateView(data){
       .domain ([0, 12])
       .range([s.margin+(0*2)*barWidth+barWidth/2, s.margin+(12*2)*barWidth+barWidth/2]);
 
+  var tooltip = d3.select("body").append("div")
+      .attr("class", "tooltip")
+      .style("opacity", 0);
+
   svg.selectAll("scatter-dots")
     .data(data)
     .enter()
@@ -117,16 +122,30 @@ function updateView(data){
     .style("opacity", 0.2)
     .style("cursor", "pointer")
     .on("mouseover",function(d) { 
-      // TODO: hover-over effect bring circle "on-top"/"in-front" view
-      var circSelect = d3.select(this);
       this.style.fill = "#696969"; 
-      showToolTip(+circSelect.attr("cx")+circSelect.attr("r")/2,
-      +circSelect.attr("cy")-TOOLTIP.height/2-5,d["Year"],d["Number in Group"], 
-      d["Education"], d["Age (Years)"]);
+
+      tooltip.transition()
+         .duration(200)
+         .style("opacity", .9)
+         .style("background-color","#696969")
+         .style("fill", "none")
+         .style("stroke", "#fff")
+         .style("stroke-width", 6)
+         .style("border-radius", "10")
+         .style("padding", "10");
+
+      // content
+      tooltip.html( "<center>" + "Year: "+d["Year"] + "<br/>" + "Number of deaths: "+ d["Number in Group"] 
+      + "<br/>" + "Education: "+ d["Education"] + "<br/>" + "Years Old: "+d["Age (Years)"] + "</center>")
+           .style("left", (d3.event.pageX + 5) + "px")
+           .style("top", (d3.event.pageY - 28) + "px");
+
     })
     .on("mouseout",function(d,i) {
-      hideToolTip();
-      this.style.fill = "black";  
+      this.style.fill = "black"; 
+      tooltip.transition()
+        .duration(500)
+        .style("opacity", 0); 
     });
 }
 
@@ -135,6 +154,10 @@ function updateViewFromButton(year){
   var svg = d3.select("#eduAgeViz");
   const s = computeSizes(svg);
   var barWidth = s.chartWidth/(2*GLOBAL.education.length-1);
+
+  var tooltip = d3.select("body").append("div")
+      .attr("class", "tooltip")
+      .style("opacity", 0);
 
   var sel = svg.selectAll("g")
     .data(filteredData)
@@ -173,19 +196,30 @@ function updateViewFromButton(year){
       .style("opacity", 0.2)
       .style("cursor", "pointer")
       .on("mouseover",function(d) { 
-        var circSelect = d3.select(this);
         this.style.fill = "#696969"; 
-        showToolTip(+circSelect.attr("cx")+circSelect.attr("r")/2,
-        +circSelect.attr("cy")-TOOLTIP.height/2-5,d["Year"],d["Number in Group"], 
-        d["Education"], d["Age (Years)"])
-        
-        d3.selectAll(".tooltip")
-          .attr("transform",
-        d3.select(this.parentNode).attr("transform"));
+
+        tooltip.transition()
+           .duration(200)
+           .style("opacity", .9)
+           .style("background-color","#696969")
+           .style("fill", "none")
+           .style("stroke", "#fff")
+           .style("stroke-width", 6)
+           .style("border-radius", "10")
+           .style("padding", "10");
+
+        // content
+        tooltip.html( "<center>" + "Year: "+d["Year"] + "<br/>" + "Number of deaths: "+ d["Number in Group"] 
+        + "<br/>" + "Education: "+ d["Education"] + "<br/>" + "Years Old: "+d["Age (Years)"] + "</center>")
+             .style("left", (d3.event.pageX + 5) + "px")
+             .style("top", (d3.event.pageY - 28) + "px");
+
       })
       .on("mouseout",function(d,i) {
-        hideToolTip();
-        this.style.fill = "black";  
+        this.style.fill = "black"; 
+        tooltip.transition()
+          .duration(500)
+          .style("opacity", 0); 
       });
 }
 
