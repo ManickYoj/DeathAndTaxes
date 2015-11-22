@@ -82,7 +82,7 @@ function run () {
       if (!addPipe) eduCauseData.removeNamedPipe(pipeName);
       else {
         eduCauseData.addNamedPipe(pipeName, (rawData) => {
-          return relabelData(rawData, "Cause", GROUPINGS["Cause - " + pipeName]);
+          return relabelData(rawData, "Cause of Death", GROUPINGS["Cause - " + pipeName]);
         });
       }
 
@@ -597,11 +597,12 @@ Matrix.prototype.bubbleView = function (selector) {
   // Define View Variables
   const root = d3.select(selector);
   root.selectAll("*").remove();
+  const SVG_PADDING = 50;
 
-  const width = parseInt(root.style("width"));
-  const height = parseInt(root.style("height"));
+  const width = parseInt(root.style("width")) - SVG_PADDING;
+  const height = parseInt(root.style("height")) - SVG_PADDING;
 
-  const MARGIN_INDICIES = 3;
+  const MARGIN_INDICIES = 4;
   const elemWidth = width / (this.colLabels.length + MARGIN_INDICIES);
   const elemHeight = height / (this.rowLabels.length + MARGIN_INDICIES);
   const maxRadius = Math.min(elemWidth, elemHeight);
@@ -641,7 +642,7 @@ Matrix.prototype.bubbleView = function (selector) {
   // Position and Create Column Labels
   const colLabels = root.append("g");
   this.colLabels.forEach((label, index) => {
-    let x = elemWidth * (MARGIN_INDICIES + index);
+    let x = elemWidth * (MARGIN_INDICIES + index) + SVG_PADDING/2;
     let y = elemHeight * (this.rowLabels.length) + maxRadius;
 
     colLabels.append("text")
@@ -677,7 +678,7 @@ Matrix.prototype.bubbleView = function (selector) {
     this.colLabels.forEach((c, colIndex) => {
       circles.append("circle")
         .attr({
-          cx: elemWidth * (colIndex + MARGIN_INDICIES),
+          cx: elemWidth * (colIndex + MARGIN_INDICIES) + SVG_PADDING/2,
           cy: elemHeight * (rowIndex) + maxRadius,
           r: Math.sqrt(this.matrix[rowIndex][colIndex].size / Math.PI) * maxRadius,
           "fill": "rgb(85, 85, 85)",
