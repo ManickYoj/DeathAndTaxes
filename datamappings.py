@@ -33,11 +33,10 @@ causeRecode39Headers = {
     "31": "Nephritis or Nephrotic Syndrome or Nephrosis",
     "32": "Pregnancy or Childbirth or the Puerperium",
     "33": "Certain Conditions Originating in the Perinatal Period",
-    "34": "Congenital Malformations or Deformations or and " +
+    "34": "Congenital Malformations, Deformations, or " +
           "Chromosomal Abnormalities",
     "35": "Sudden Infant Death Syndrome",
-    "36": "Symptoms and Signs and Abnormal Clinical " +
-          "and Laboratory Findings that are not Elsewhere Classified",
+    "36": "Unclassified Symptoms or Signs",
     "37": "All Other Diseases Residual",
     "38": "Motor Vehicle Accidents",
     "39": "All Other and Unspecified Accidents and Adverse Effects",
@@ -48,24 +47,24 @@ causeRecode39Headers = {
 
 educationLevel = {
     "": "Not Specified",
-    "00": "No formal education",
-    "01": "Years of elementary school",
-    "02": "Years of elementary school",
-    "03": "Years of elementary school",
-    "04": "Years of elementary school",
-    "05": "Years of elementary school",
-    "06": "Years of elementary school",
-    "07": "Years of elementary school",
-    "08": "Years of elementary school",
-    "09": "1 Year of high school",
-    "10": "2 Years of high school",
-    "11": "3 Years of high school",
-    "12": "4 Years of high school",
-    "13": "1 Year of college",
-    "14": "2 Years of college",
-    "15": "3 Years of college",
-    "16": "4 Years of college",
-    "17": "5 or more years of college",
+    "00": "No Formal Education",
+    "01": "1 Years of Elementary School",
+    "02": "2 Years of Elementary School",
+    "03": "3 Years of Elementary School",
+    "04": "4 Years of Elementary School",
+    "05": "5 Years of Elementary School",
+    "06": "6 Years of Elementary School",
+    "07": "7 Years of Elementary School",
+    "08": "8 Years of Elementary School",
+    "09": "1 Year of High School",
+    "10": "2 Years of High School",
+    "11": "3 Years of High School",
+    "12": "4 Years of High School",
+    "13": "1 Year of College",
+    "14": "2 Years of College",
+    "15": "3 Years of College",
+    "16": "4 Years of College",
+    "17": "5+ Years of College",
     "99": "Not Started"
 }
 
@@ -108,4 +107,10 @@ mannerOfDeathHeaders = {
     "5": "Could Not Determine",
     "6": "Self Inflicted",
     "7": "Natural"
+}
+
+sex = {
+    "": "Not Specified",
+    "F": "Female",
+    "M": "Male"
 }

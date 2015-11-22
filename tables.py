@@ -42,6 +42,21 @@ WAREHOUSE_TABLES = [
                 "Education",
                 "Age_Value",
             ]
+    },
+
+    {
+        "dropPrevious": True,
+        "verbose": True,
+        "sourceDB": "mortality.db",
+        "sourceTable": "mortality",
+        "destDB": "warehouse.db",
+        "destTable": "EducationAgeGender",
+        "selections":
+            [
+                "Education",
+                "Age_Value",
+                "Sex"
+            ]
     }
 ]
 
@@ -73,6 +88,11 @@ COLUMNS = {
         "header": "Age (Years)",
         "mapFunc": lambda x: int(x)
     },
+
+    "Gender": {
+        "header": "Gender",
+        "mapping": datamappings.sex
+    }
 }
 
 # The tables that are available for use by the server
@@ -80,16 +100,22 @@ COLUMNS = {
 SERVER_TABLES = {
     "EducationAndCause39": [
         COLUMNS["Education"],
-        COLUMNS["Cause of Death"]
+        COLUMNS["Cause of Death"],
     ],
 
     "AgeAndCause39": [
         COLUMNS["Age"],
-        COLUMNS["Cause of Death"]
+        COLUMNS["Cause of Death"],
     ],
 
     "EducationAndAge": [
         COLUMNS["Education"],
         COLUMNS["Age"],
+    ],
+
+    "EducationAgeGender": [
+        COLUMNS["Education"],
+        COLUMNS["Age"],
+        COLUMNS["Gender"],
     ]
 }

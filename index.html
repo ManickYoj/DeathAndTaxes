@@ -8,6 +8,7 @@
 
 		<script src="js/d3.min.js" charset="utf-8"></script>
 		<script src="js/babel.min.js" charset="utf-8"></script>
+		<script src="js/_.min.js" charset="utf-8"></script>
 		<script
 			type="text/javascript"
 			src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js">
@@ -20,16 +21,67 @@
 		</style>
 	</head>
 	<body>
-		<center>
-			<p>Education Level vs. Age of Death</p>
-			<button id="button_2003" type="submit">2003</button>
-			<button id="button_2008" type="submit">2008</button>
-			<button id="button_2013" type="submit">2013</button>
+		<nav class="navbar navbar-default">
+			<div class="container-fluid">
+				<button
+					class="btn btn-default navbar-btn"
+					onclick="$('#viz2').hide(); $('#viz1').show();"
+				>
+					Age of Death by Educational Attainment
+				</button>
+				<button
+					class="btn btn-default navbar-btn"
+					onclick="$('#viz1').hide(); $('#viz2').show()"
+				>
+					Cause of Death by Educational Attainment
+				</button>
+			</div>
+		</nav>
+		
 
-		</center>
+		<div id="viz1">
+			<center>
+					<p>Education Level vs. Age of Death</p>
+					<button id="button_2003" class="btn default-btn" type="submit">2003</button>
+					<button id="button_2008" class="btn default-btn" type="submit">2008</button>
+					<button id="button_2013" class="btn default-btn" type="submit">2013</button>
 
-		<div>
+			</center>
 			<svg id="eduAgeViz" height="1000" width="2000" class="centeredSvg"></svg>
+		</div>
+
+		<div id="viz2" style="display: none; width: 100%;">
+			<div class="container">
+				<div class="row">
+					<h3>Cause of Death by Education</h3>
+					<div class="col-md-6">
+						<h3><small>Details</small></h3>
+						<p>
+							This visualization shows the percentage of persons who
+							died from each cause organized by their highest educational
+							attainment at death. Note that the size of the bubbles does
+							not correspond to the number of persons who died, but rather
+							the percentage of persons of that educational attainment at
+							death. Mouse over any bubble for details.
+						</p>
+					</div>
+					<div class="col-md-4 col-md-offset-2">
+						<h3><small>Controls</small></h3>
+						<p>
+							<label style="margin-right: 10px;">Year: </label>
+							<label class="radio-inline">
+								<input type="radio" value="2003" name="yearselect">2003</label>
+							<label class="radio-inline">
+								<input type="radio" value="2008" name="yearselect">2008</label>
+							<label class="radio-inline">
+								<input type="radio" value="2013" name="yearselect">2013</label>
+							<label class="radio-inline">
+								<input type="radio" value="all" name="yearselect" checked>All Years</label>
+						</p>
+					</div>
+				</div>
+			</div>
+			<svg id="eduCauseViz" height="700" width="1500" class="centeredSvg"></svg>
 		</div>
 
 

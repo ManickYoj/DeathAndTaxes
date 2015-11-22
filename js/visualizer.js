@@ -1,15 +1,74 @@
 $(run);
 
 function run () {
+  // -- Init Viz 1 -- //
   button_2003.addEventListener("click",function() { updateViewFromButton(2003); });
   button_2008.addEventListener("click",function() { updateViewFromButton(2008); });
   button_2013.addEventListener("click",function() { updateViewFromButton(2013); });
 
   initializeView();
-  getData(function(data){
+  getData("/EducationAndAge", (data) => {
+    GLOBAL.data = data;
     setupView();
     updateView(data)
-  })
+  });
+
+  // -- Init Viz 2 -- //
+  getData("/EducationAndCause39", (d) => {
+    const eduCauseData = new Data(d);
+
+    // Group specific cause of death into categories
+    // EG. All malignant neoplasm deaths -> Cancer
+    eduCauseData.addPipe((rawData) => {
+      return relabelData(rawData, "Cause of Death", GROUPINGS["Cause of Death"]);
+    });
+
+    // Group educational attainments
+    eduCauseData.addPipe((rawData) => {
+      return relabelData(rawData, "Education", GROUPINGS["Education"]);
+    });
+
+    // Filter out all Not Specified values (for any key)
+    eduCauseData.addPipe((rawData) => {
+      return _.reject(rawData, datum => _.contains(datum, "Not Specified"));
+    });
+
+    // Construct a matrix from the data
+    let eduCauseMatrix = new Matrix(
+      eduCauseData.runPipeline(),
+      "Education",
+      "Cause of Death"
+    );
+
+    // Normalize matrix by educational attainment
+    eduCauseMatrix.normalizeByRow();
+
+    // Construct a view for the matrix
+    eduCauseMatrix.bubbleView("#eduCauseViz");
+
+    // Handle year switching
+    $('input[name=yearselect]').change((e) => {
+      const year = event.target.value
+
+      if (year === "all") {
+        eduCauseData.removeNamedPipe("year");
+      }
+      else {
+        eduCauseData.addNamedPipe("year", (rawData) => {
+          return _.filter(rawData, datum => datum.Year === parseInt(year));
+        });
+      }
+
+      // Regenerate Matrix & Viz
+      eduCauseMatrix = new Matrix(
+        eduCauseData.runPipeline(),
+        "Education",
+        "Cause of Death"
+      );
+      eduCauseMatrix.normalizeByRow();
+      eduCauseMatrix.bubbleView("#eduCauseViz");
+    })
+  });
 }
 
 function computeSizes (svg) {
@@ -92,6 +151,9 @@ function setupView(){
 
 function updateView(data){
 
+  // Group elementary school to free up space in viz
+  data = relabelData(data, "Education", GROUPINGS["Primary Education"]);
+
   var svg = d3.select("#eduAgeViz");
   const s = computeSizes(svg);
   var barWidth = s.chartWidth/(2*GLOBAL.education.length-1);
@@ -127,7 +189,7 @@ function updateView(data){
       tooltip.transition()
          .duration(200)
          .style("opacity", .9)
-         .style("background-color","#696969")
+         .style("background-color","#EEE")
          .style("fill", "none")
          .style("stroke", "#fff")
          .style("stroke-width", 6)
@@ -150,7 +212,9 @@ function updateView(data){
 }
 
 function updateViewFromButton(year){
-  var filteredData = getDataRows(GLOBAL.data, "Year", year);  
+  var filteredData = getDataRows(GLOBAL.data, "Year", year);
+  filteredData = relabelData(filteredData, "Education", GROUPINGS["Primary Education"]);
+
   var svg = d3.select("#eduAgeViz");
   const s = computeSizes(svg);
   var barWidth = s.chartWidth/(2*GLOBAL.education.length-1);
@@ -190,9 +254,9 @@ function updateViewFromButton(year){
   svg.selectAll("scatter-dots")
     .data(filteredData)
     .enter().append("circle")
-      .attr("cx", function (d) {return x(GLOBAL.education.indexOf(d["Education"])); } )
-      .attr("cy", function (d) { return y(d["Age (Years)"]); } )
-      .attr("r", function(d){ return d["Number in Group"]/500; })
+      .attr("cx", (d) => x(GLOBAL.education.indexOf(d["Education"])))
+      .attr("cy", (d) => y(d["Age (Years)"]))
+      .attr("r", (d) => d["Number in Group"]/500)
       .style("opacity", 0.2)
       .style("cursor", "pointer")
       .on("mouseover",function(d) { 
@@ -201,7 +265,7 @@ function updateViewFromButton(year){
         tooltip.transition()
            .duration(200)
            .style("opacity", .9)
-           .style("background-color","#696969")
+           .style("background-color","#EEE")
            .style("fill", "none")
            .style("stroke", "#fff")
            .style("stroke-width", 6)
@@ -229,17 +293,17 @@ var GLOBAL = {
   years : ["2003","2008", "2013"],
   education : [
     "Not Specified", 
-    "No formal education", 
-    "Years of elementary school", 
-    "1 Year of high school",
-    "2 Years of high school",
-    "3 Years of high school",
-    "4 Years of high school",
-    "1 Year of college",
-    "2 Years of college",
-    "3 Years of college",
-    "4 Years of college",
-    "5 or more years of college",
+    "No Formal Education", 
+    "Some Elementary School",
+    "1 Year of High School",
+    "2 Years of High School",
+    "3 Years of High School",
+    "4 Years of High School",
+    "1 Year of College",
+    "2 Years of College",
+    "3 Years of College",
+    "4 Years of College",
+    "5+ Years of College",
     "Not Started"
   ],
   ageStamps : [0,20,40,60,80,100,120,140]
@@ -302,13 +366,12 @@ function hideToolTip () {
     d3.selectAll(".tooltip").remove();
 }
 
-function getData (f) {
-  d3.json("/EducationAndAge", function(error,data) {
+function getData (endpoint, f) {
+  d3.json(endpoint, function(error,data) {
      if (error) {
          console.log(error);
      } else {
          d3.select("#loading").remove();
-         GLOBAL.data = data;
          f(data);
      }
   });
@@ -318,4 +381,357 @@ function getDataRows (data, parameter, value) {
   return data.filter(function(row){
     return (row[parameter]===value)
   })
+}
+
+function Data(rawData) {
+  this.rawData = rawData;
+  this.pipeline = [];
+  this.namedPipes = {};
+}
+
+Data.prototype.addPipe = function(pipe) {
+  this.pipeline.push(pipe);
+}
+
+Data.prototype.addNamedPipe = function(name, pipe) {
+  this.namedPipes[name] = pipe;
+}
+
+Data.prototype.removeNamedPipe = function(name) {
+  if (name in this.namedPipes) delete this.namedPipes[name];
+}
+
+Data.prototype.runPipeline = function () {
+  // Deep copy the rawData
+  let transformedData = JSON.parse(JSON.stringify(this.rawData));
+
+  this.pipeline.forEach((pipe) => {
+    transformedData = pipe(transformedData);
+  });
+
+  _.each(this.namedPipes, (pipe) => {
+    transformedData = pipe(transformedData);
+  });
+
+  return transformedData;
+}
+
+const GROUPINGS = {
+  "Cause of Death": {
+    "Cancer": [
+      "Malignant Neoplasm Unspecified",
+      "Malignant Neoplasm of Stomach",
+      "Malignant Neoplasm of Colon or Rectum or Anus",
+      "Malignant Neoplasm of Pancreas",
+      "Malignant Neoplasm of Trachea or Bronchus or Lung",
+      "Malignant Neoplasm of Breast",
+      "Malignant Neoplasm of Cervix or Uteri or Corpus Uteri or Ovary",
+      "Malignant Neoplasm of Prostate",
+      "Malignant Neoplasm of Urinary Tract",
+      "Non Hodgkins Lymphoma",
+      "Leukemia",
+      "Other Malignant Neoplasms",
+    ],
+
+    "Cardiovascular Disease": [
+      "Diseases of Heart",
+      "Hypertensive Heart Disease with or without Renal Disease",
+      "Ischemic Heart Diseases",
+      "Other Diseases of Heart",
+      "Essential Primary Hypertension or Hypertensive Renal Disease",
+      "Cerebrovascular Diseases",
+      "Atherosclerosis",
+      "Other Diseases of Circulatory System",
+    ],
+  },
+
+  "Primary Education": {
+    "Some Elementary School" : [
+      "1 Years of Elementary School",
+      "2 Years of Elementary School",
+      "3 Years of Elementary School",
+      "4 Years of Elementary School",
+      "5 Years of Elementary School",
+      "6 Years of Elementary School",
+      "7 Years of Elementary School",
+      "8 Years of Elementary School",
+    ],
+  },
+
+  "Education": {
+    "Elementary and Middle School" : [
+      "1 Years of Elementary School",
+      "2 Years of Elementary School",
+      "3 Years of Elementary School",
+      "4 Years of Elementary School",
+      "5 Years of Elementary School",
+      "6 Years of Elementary School",
+      "7 Years of Elementary School",
+      "8 Years of Elementary School",
+    ],
+
+    "High School": [
+      "1 Year of High School",
+      "2 Years of High School",
+      "3 Years of High School",
+      "4 Years of High School",
+    ],
+
+    "College": [
+      "1 Year of College",
+      "2 Years of College",
+      "3 Years of College",
+      "4 Years of College",
+    ],
+  }
+}
+
+function relabelData(data, key, grouping={}) {
+  return data.map((datum) => {
+    _.each(grouping, (membersOfGroup, groupName) => {
+      if (membersOfGroup.indexOf(datum[key]) != -1) datum[key] = groupName;
+    })
+
+    return datum;
+  });
+}
+
+
+
+/**
+ * Matrix
+ * ------
+ *
+ * A 'class' for organizing data into a 2D format for visualization.
+ *
+ * The Matrix format takes an array of SQL row-like data and condenses
+ * it based on two properties - one for rows and one for columns.
+ */
+
+
+/**
+ * Condense all of the data by two properties, the rowAxisKey
+ * and colAxisKey. Construct a matrix out of the results
+ * 
+ * @param  {Array} data The SQL-row-style data
+ * @param  {String} rowAxisKey The key by which to group data by row
+ * @param  {String} colAxisKey The key by which to group data by column
+ */
+function Matrix (data, rowAxisKey, colAxisKey) {
+  this.rowLabels = _.uniq(_.pluck(data, rowAxisKey));
+  this.colLabels = _.uniq(_.pluck(data, colAxisKey));
+
+  // Create a 2D Matrix with the axes specified. At each
+  // index, store an object with all of the data that match
+  // those two axis and the sum of the number of people that
+  // match that axis
+  this.matrix = new Array(this.rowLabels.length);
+  for (let row = 0; row < this.rowLabels.length; row++) {
+    this.matrix[row] = new Array(this.rowLabels.length);
+    this.colLabels.forEach((label, col) => {
+      this.matrix[row][col] = {
+        row,
+        col,
+        rowLabel: this.rowLabels[row],
+        colLabel: this.colLabels[col],
+        size: 0,
+        data: [],
+      }
+    })
+  }
+
+  // Assign all of the data to the points at which
+  // they belong
+  let row, col;
+  data.forEach((datum) => {
+    row = this.rowLabels.indexOf(datum[rowAxisKey]);
+    col = this.colLabels.indexOf(datum[colAxisKey]);
+
+    this.matrix[row][col].data.push(datum);
+    this.matrix[row][col].size += datum["Number in Group"];
+  });
+}
+
+/**
+ * Normalize the 'size' attribute of each element in the matrix
+ * so that it represents a ratio of the total data in its column.
+ */
+Matrix.prototype.normalizeByColumn = function () {
+  for (let col = 0; col < this.colLabels.length; col++ ) {
+    let colTotal = 0;
+
+    // Total column
+    for (let row = 0; row < this.rowLabels.length; row++ ) {
+      this.matrix[row][col].size = this.totalData(row, col);
+      colTotal += this.matrix[row][col].size;
+    }
+
+    // Normalize each 'size' value in column by total
+    for (let row = 0; row < this.rowLabels.length; row++) {
+      this.matrix[row][col].size /= colTotal;
+    }
+  }
+}
+
+/**
+ * Normalize the 'size' attribute of each element in the matrix
+ * so that it represents a ratio of the total data in its row.
+ */
+Matrix.prototype.normalizeByRow = function () {
+  for (let row = 0; row < this.rowLabels.length; row++ ) {
+    let rowTotal = 0;
+
+    // Total column
+    for (let col = 0; col < this.colLabels.length; col++ ) {
+      this.matrix[row][col].size = this.totalData(row, col);
+      rowTotal += this.matrix[row][col].size;
+    }
+
+    // Normalize each 'size' value in column by total
+    for (let col = 0; col < this.colLabels.length; col++) {
+      this.matrix[row][col].size /= rowTotal;
+    }
+  }
+}
+
+/**
+ * Total all of the data elements at a certain point in the matrix.
+ * 
+ * @param  {Number} row The row index of the point to total
+ * @param  {Number} col The column index of the point to total
+ * @return {Number}     The number of people represented by that matrix point
+ */
+Matrix.prototype.totalData = function (row, col) {
+  let total = 0;
+
+  this.matrix[row][col].data.forEach((datum) => {
+    total += datum["Number in Group"];
+  })
+
+  return total;
+}
+
+/**
+ * Project a view of the matrix into an SVG.
+ * 
+ * @param  {String} selector A d3 selector referring to an svg
+ */
+Matrix.prototype.bubbleView = function (selector) {
+  // Define View Variables
+  const root = d3.select(selector);
+  root.selectAll("*").remove();
+
+  const width = parseInt(root.style("width"));
+  const height = parseInt(root.style("height"));
+
+  const MARGIN_INDICIES = 3;
+  const elemWidth = width / (this.colLabels.length + MARGIN_INDICIES);
+  const elemHeight = height / (this.rowLabels.length + MARGIN_INDICIES);
+  const maxRadius = Math.min(elemWidth, elemHeight);
+
+  // Position and Create Row Labels
+  const rowLabels = root.append("g");
+  this.rowLabels.forEach((label, index) => {
+    let x = 10;
+    let y = elemHeight * (index) + maxRadius;
+
+    rowLabels.append("text")
+      .text(label)
+      .attr({
+        x,
+        y: y - 5,
+      })
+      .style({
+        "fill": "rgb(105, 105, 105)",
+        "font-size": "12px",
+        "text-transform": "capitalize",
+      });
+
+    rowLabels.append("line")
+      .attr({
+        x1: 10,
+        x2: width - 10,
+        y1: y,
+        y2: y,
+      })
+      .style({
+        "stroke-width": "1px",
+        "stroke-opacity": "0.1",
+        "stroke": "black",
+      });
+  });
+
+  // Position and Create Column Labels
+  const colLabels = root.append("g");
+  this.colLabels.forEach((label, index) => {
+    let x = elemWidth * (MARGIN_INDICIES + index);
+    let y = elemHeight * (this.rowLabels.length) + maxRadius;
+
+    colLabels.append("text")
+      .text(label)
+      .attr({
+        x: x + 5,
+        y,
+        "transform": `rotate(30 ${x} ${y})`,
+      })
+      .style({
+        "fill": "rgb(105, 105, 105)",
+        "font-size": "12px",
+        "text-transform": "capitalize",
+      });
+
+    colLabels.append("line")
+      .attr({
+        x1: x,
+        x2: x,
+        y1: 10,
+        y2: y,
+      })
+      .style({
+        "stroke-width": "1px",
+        "stroke-opacity": "0.1",
+        "stroke": "black",
+      })
+  });
+
+  // Render Data as Circles
+  const circles = root.append("g");
+  this.rowLabels.forEach((r, rowIndex) => {
+    this.colLabels.forEach((c, colIndex) => {
+      circles.append("circle")
+        .attr({
+          cx: elemWidth * (colIndex + MARGIN_INDICIES),
+          cy: elemHeight * (rowIndex) + maxRadius,
+          r: Math.sqrt(this.matrix[rowIndex][colIndex].size / Math.PI) * maxRadius,
+          "fill": "rgb(85, 85, 85)",
+        })
+        .on("mouseover", (e) => {
+          const tooltip = d3.select(".tooltip")
+          tooltip.transition()
+           .duration(200)
+           .style("opacity", .9)
+           .style("background-color","#EEE")
+           .style("fill", "none")
+           .style("stroke", "#fff")
+           .style("stroke-width", 6)
+           .style("border-radius", "10")
+           .style("padding", "10");
+           const d = this.matrix[rowIndex][colIndex];
+            // content
+            tooltip.html(
+              `<center> ${d.colLabel} <br/>
+               ${(d.size * 100).toFixed(1)}% of Deaths of Persons <br/>
+               with Highest Educational Status </br>
+               ${d.rowLabel} </center>`)
+             .style("left", (d3.event.pageX + 5) + "px")
+             .style("top", (d3.event.pageY - 28) + "px");
+
+        }).on("mouseout", () => {
+          d3.select(".tooltip")
+            .transition()
+            .duration(500)
+            .style("opacity", 0);
+        });
+    });
+  });
 }
