@@ -56,8 +56,7 @@ docs/_build/
 # PyBuilder
 target/
 
-*.db
-
+# Database stuff
+mortality.db
 *.dat
-
 VS13MORT.DUSMCPUB
