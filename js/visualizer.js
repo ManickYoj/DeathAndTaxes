@@ -63,9 +63,7 @@ function run () {
     $('input[name=yearselect]').change((e) => {
       const year = event.target.value;
 
-      if (year === "all") {
-        eduCauseData.removeNamedPipe("year");
-      }
+      if (year === "all") eduCauseData.removeNamedPipe("year");
       else {
         eduCauseData.addNamedPipe("year", (rawData) => {
           return _.filter(rawData, datum => datum.Year === parseInt(year));
@@ -73,13 +71,7 @@ function run () {
       }
 
       // Regenerate Matrix & Viz
-      eduCauseMatrix = new Matrix(
-        eduCauseData.runPipeline(),
-        "Education",
-        "Cause of Death"
-      );
-      eduCauseMatrix.normalizeByRow();
-      eduCauseMatrix.bubbleView("#eduCauseViz");
+      regenerateVizTwo(eduCauseData.runPipeline());
     });
 
     // Handle Cause Drilldown
@@ -87,9 +79,7 @@ function run () {
       const pipeName = event.target.value;
       const addPipe = !event.target.checked;
 
-      if (!addPipe) {
-        eduCauseData.removeNamedPipe(pipeName);
-      }
+      if (!addPipe) eduCauseData.removeNamedPipe(pipeName);
       else {
         eduCauseData.addNamedPipe(pipeName, (rawData) => {
           return relabelData(rawData, "Cause", GROUPINGS["Cause - " + pipeName]);
@@ -97,13 +87,7 @@ function run () {
       }
 
       // Regenerate Matrix & Viz
-      eduCauseMatrix = new Matrix(
-        eduCauseData.runPipeline(),
-        "Education",
-        "Cause of Death"
-      );
-      eduCauseMatrix.normalizeByRow();
-      eduCauseMatrix.bubbleView("#eduCauseViz");
+      regenerateVizTwo(eduCauseData.runPipeline());
     });
 
     // Handle Education Drilldown
@@ -111,9 +95,7 @@ function run () {
       const pipeName = event.target.value;
       const addPipe = !event.target.checked;
 
-      if (!addPipe) {
-        eduCauseData.removeNamedPipe(pipeName);
-      }
+      if (!addPipe) eduCauseData.removeNamedPipe(pipeName);
       else {
         eduCauseData.addNamedPipe(pipeName, (rawData) => {
           return relabelData(rawData, "Education", GROUPINGS["Education - " + pipeName]);
@@ -121,15 +103,19 @@ function run () {
       }
 
       // Regenerate Matrix & Viz
-      eduCauseMatrix = new Matrix(
-        eduCauseData.runPipeline(),
-        "Education",
-        "Cause of Death"
-      );
-      eduCauseMatrix.normalizeByRow();
-      eduCauseMatrix.bubbleView("#eduCauseViz");
+      regenerateVizTwo(eduCauseData.runPipeline());
     });
   });
+}
+
+function regenerateVizTwo(data) {
+  const viz2 = new Matrix(
+    data,
+    "Education",
+    "Cause of Death"
+  );
+  viz2.normalizeByRow();
+  viz2.bubbleView("#eduCauseViz");
 }
 
 function computeSizes (svg) {
