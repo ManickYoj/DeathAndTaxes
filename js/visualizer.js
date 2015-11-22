@@ -17,30 +17,33 @@ function run () {
   getData("/EducationAndCause39", (d) => {
     const eduCauseData = new Data(d);
 
+    // Filter out all Not Specified values (for any key)
+    eduCauseData.addPipe((rawData) => {
+      return _.reject(rawData, datum => _.contains(datum, "Not Specified"));
+    });
+
     // Group specific cause of death into categories
     // EG. All malignant neoplasm deaths -> Cancer
-    eduCauseData.addPipe((rawData) => {
-      return relabelData(rawData, "Cause of Death", GROUPINGS["Cause of Death"]);
+    eduCauseData.addNamedPipe("Cancer", (rawData) => {
+      return relabelData(rawData, "Cause of Death", GROUPINGS["Cause - Cancer"]);
+    });
+
+    eduCauseData.addNamedPipe("Cardiovascular", (rawData) => {
+      return relabelData(rawData, "Cause of Death", GROUPINGS["Cause - Cardiovascular"]);
     });
 
 
     // Group educational attainments
     eduCauseData.addNamedPipe("Elementary", (rawData) => {
-      return relabelData(rawData, "Education", GROUPINGS["Elementary Education"]);
+      return relabelData(rawData, "Education", GROUPINGS["Education - Elementary"]);
     });
 
     eduCauseData.addNamedPipe("High School", (rawData) => {
-      return relabelData(rawData, "Education", GROUPINGS["High School Education"]);
+      return relabelData(rawData, "Education", GROUPINGS["Education - High School"]);
     });
 
     eduCauseData.addNamedPipe("College", (rawData) => {
       return relabelData(rawData, "Education", GROUPINGS["College Education"]);
-    });
-
-
-    // Filter out all Not Specified values (for any key)
-    eduCauseData.addPipe((rawData) => {
-      return _.reject(rawData, datum => _.contains(datum, "Not Specified"));
     });
 
     // Construct a matrix from the data
@@ -79,6 +82,30 @@ function run () {
       eduCauseMatrix.bubbleView("#eduCauseViz");
     });
 
+    // Handle Cause Drilldown
+    $('input[name=causeselect]').change((e) => {
+      const pipeName = event.target.value;
+      const addPipe = !event.target.checked;
+
+      if (!addPipe) {
+        eduCauseData.removeNamedPipe(pipeName);
+      }
+      else {
+        eduCauseData.addNamedPipe(pipeName, (rawData) => {
+          return relabelData(rawData, "Cause", GROUPINGS["Cause - " + pipeName]);
+        });
+      }
+
+      // Regenerate Matrix & Viz
+      eduCauseMatrix = new Matrix(
+        eduCauseData.runPipeline(),
+        "Education",
+        "Cause of Death"
+      );
+      eduCauseMatrix.normalizeByRow();
+      eduCauseMatrix.bubbleView("#eduCauseViz");
+    });
+
     // Handle Education Drilldown
     $('input[name=educationselect]').change((e) => {
       const pipeName = event.target.value;
@@ -89,7 +116,7 @@ function run () {
       }
       else {
         eduCauseData.addNamedPipe(pipeName, (rawData) => {
-          return relabelData(rawData, "Education", GROUPINGS[pipeName + " Education"]);
+          return relabelData(rawData, "Education", GROUPINGS["Education - " + pipeName]);
         });
       }
 
@@ -450,94 +477,6 @@ Data.prototype.runPipeline = function () {
   return transformedData;
 }
 
-const GROUPINGS = {
-  "Cause of Death": {
-    "Cancer": [
-      "Malignant Neoplasm Unspecified",
-      "Malignant Neoplasm of Stomach",
-      "Malignant Neoplasm of Colon or Rectum or Anus",
-      "Malignant Neoplasm of Pancreas",
-      "Malignant Neoplasm of Trachea or Bronchus or Lung",
-      "Malignant Neoplasm of Breast",
-      "Malignant Neoplasm of Cervix or Uteri or Corpus Uteri or Ovary",
-      "Malignant Neoplasm of Prostate",
-      "Malignant Neoplasm of Urinary Tract",
-      "Non Hodgkins Lymphoma",
-      "Leukemia",
-      "Other Malignant Neoplasms",
-    ],
-
-    "Cardiovascular Disease": [
-      "Diseases of Heart",
-      "Hypertensive Heart Disease with or without Renal Disease",
-      "Ischemic Heart Diseases",
-      "Other Diseases of Heart",
-      "Essential Primary Hypertension or Hypertensive Renal Disease",
-      "Cerebrovascular Diseases",
-      "Atherosclerosis",
-      "Other Diseases of Circulatory System",
-    ],
-  },
-
-  "Elementary Education": {
-    "Elementary School (1-8)" : [
-      "1 Years of Elementary School",
-      "2 Years of Elementary School",
-      "3 Years of Elementary School",
-      "4 Years of Elementary School",
-      "5 Years of Elementary School",
-      "6 Years of Elementary School",
-      "7 Years of Elementary School",
-      "8 Years of Elementary School",
-    ],
-  },
-
-  "High School Education" : {
-    "High School (9-12)": [
-      "1 Year of High School",
-      "2 Years of High School",
-      "3 Years of High School",
-      "4 Years of High School",
-    ],
-  },
-
-  "College Education": {
-    "College": [
-      "1 Year of College",
-      "2 Years of College",
-      "3 Years of College",
-      "4 Years of College",
-    ],
-  },
-
-  "Education": {
-    "Elementary School (1-8)" : [
-      "1 Years of Elementary School",
-      "2 Years of Elementary School",
-      "3 Years of Elementary School",
-      "4 Years of Elementary School",
-      "5 Years of Elementary School",
-      "6 Years of Elementary School",
-      "7 Years of Elementary School",
-      "8 Years of Elementary School",
-    ],
-
-    "High School (9-12)": [
-      "1 Year of High School",
-      "2 Years of High School",
-      "3 Years of High School",
-      "4 Years of High School",
-    ],
-
-    "College": [
-      "1 Year of College",
-      "2 Years of College",
-      "3 Years of College",
-      "4 Years of College",
-    ],
-  }
-}
-
 function relabelData(data, key, grouping={}) {
   return data.map((datum) => {
     _.each(grouping, (membersOfGroup, groupName) => {
@@ -786,4 +725,122 @@ Matrix.prototype.bubbleView = function (selector) {
         });
     });
   });
+}
+
+const GROUPINGS = {
+  "Cause of Death": {
+    "Cancer": [
+      "Malignant Neoplasm Unspecified",
+      "Malignant Neoplasm of Stomach",
+      "Malignant Neoplasm of Colon or Rectum or Anus",
+      "Malignant Neoplasm of Pancreas",
+      "Malignant Neoplasm of Trachea or Bronchus or Lung",
+      "Malignant Neoplasm of Breast",
+      "Malignant Neoplasm of Cervix or Uteri or Corpus Uteri or Ovary",
+      "Malignant Neoplasm of Prostate",
+      "Malignant Neoplasm of Urinary Tract",
+      "Non Hodgkins Lymphoma",
+      "Leukemia",
+      "Other Malignant Neoplasms",
+    ],
+
+    "Cardiovascular Disease": [
+      "Diseases of Heart",
+      "Hypertensive Heart Disease with or without Renal Disease",
+      "Ischemic Heart Diseases",
+      "Other Diseases of Heart",
+      "Essential Primary Hypertension or Hypertensive Renal Disease",
+      "Cerebrovascular Diseases",
+      "Atherosclerosis",
+      "Other Diseases of Circulatory System",
+    ],
+  },
+
+  "Cause - Cancer": {
+    "Cancer": [
+      "Malignant Neoplasm Unspecified",
+      "Malignant Neoplasm of Stomach",
+      "Malignant Neoplasm of Colon or Rectum or Anus",
+      "Malignant Neoplasm of Pancreas",
+      "Malignant Neoplasm of Trachea or Bronchus or Lung",
+      "Malignant Neoplasm of Breast",
+      "Malignant Neoplasm of Cervix or Uteri or Corpus Uteri or Ovary",
+      "Malignant Neoplasm of Prostate",
+      "Malignant Neoplasm of Urinary Tract",
+      "Non Hodgkins Lymphoma",
+      "Leukemia",
+      "Other Malignant Neoplasms",
+    ],
+  },
+
+  "Cause - Cardiovascular": {
+    "Cardiovascular Disease": [
+      "Diseases of Heart",
+      "Hypertensive Heart Disease with or without Renal Disease",
+      "Ischemic Heart Diseases",
+      "Other Diseases of Heart",
+      "Essential Primary Hypertension or Hypertensive Renal Disease",
+      "Cerebrovascular Diseases",
+      "Atherosclerosis",
+      "Other Diseases of Circulatory System",
+    ],
+  },
+
+  "Education - Elementary": {
+    "Elementary School (1-8)" : [
+      "1 Years of Elementary School",
+      "2 Years of Elementary School",
+      "3 Years of Elementary School",
+      "4 Years of Elementary School",
+      "5 Years of Elementary School",
+      "6 Years of Elementary School",
+      "7 Years of Elementary School",
+      "8 Years of Elementary School",
+    ],
+  },
+
+  "Education - High School" : {
+    "High School (9-12)": [
+      "1 Year of High School",
+      "2 Years of High School",
+      "3 Years of High School",
+      "4 Years of High School",
+    ],
+  },
+
+  "Education - College": {
+    "College": [
+      "1 Year of College",
+      "2 Years of College",
+      "3 Years of College",
+      "4 Years of College",
+    ],
+  },
+
+  "Education": {
+    "Elementary School (1-8)" : [
+      "1 Years of Elementary School",
+      "2 Years of Elementary School",
+      "3 Years of Elementary School",
+      "4 Years of Elementary School",
+      "5 Years of Elementary School",
+      "6 Years of Elementary School",
+      "7 Years of Elementary School",
+      "8 Years of Elementary School",
+    ],
+
+    "High School (9-12)": [
+      "1 Year of High School",
+      "2 Years of High School",
+      "3 Years of High School",
+      "4 Years of High School",
+    ],
+
+    "College": [
+      "1 Year of College",
+      "2 Years of College",
+      "3 Years of College",
+      "4 Years of College",
+    ],
+  }
 }
