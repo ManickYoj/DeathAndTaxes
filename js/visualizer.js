@@ -28,7 +28,7 @@ function computeSizes (svg) {
 function initializeView () { 
   const svg = d3.select("#eduAgeViz");
   const s = computeSizes(svg);
-  
+
   // what year
   svg.append("text")
   .attr({
@@ -55,13 +55,22 @@ function initializeView () {
     "text-anchor": "middle",
   })
   .text("LOADING...");
-}
 
+}
 function setupView(){
   // TODO: show y axis
   const svg = d3.select("#eduAgeViz");
   const s = computeSizes(svg);
   var barWidth = s.chartWidth/(2*GLOBAL.education.length-1);
+
+  // var yearsScale = d3.scale.ordinal()
+  //     .domain(GLOBAL.ageStamps)
+  //     .rangeBands([s.height - s.margin, s.margin]);
+
+  // var yearsAxis =d3.svg.axis()
+  //   .orient('left')
+  //   .tickSize(1) // Distances the year label from state labels
+  //   .scale(yearsScale)
 
   var sel = svg.selectAll("g")
     .data(GLOBAL.education)
