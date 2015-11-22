@@ -21,7 +21,12 @@ def getJS(filename):
 
 @route('/')
 def index():
-    return static_file('index.html', root='./')
+    return static_file('project4.html', root='./')
+
+
+@route('/test')
+def test():
+    return static_file('test.html', root='./')
 
 
 @route('/<tableName>')
