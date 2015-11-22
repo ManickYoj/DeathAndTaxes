@@ -1,6 +1,7 @@
 $(run);
 
 function run () {
+  // -- Init Viz 1 -- //
   button_2003.addEventListener("click",function() { updateViewFromButton(2003); });
   button_2008.addEventListener("click",function() { updateViewFromButton(2008); });
   button_2013.addEventListener("click",function() { updateViewFromButton(2013); });
@@ -12,6 +13,7 @@ function run () {
     updateView(data)
   });
 
+  // -- Init Viz 2 -- //
   getData("/EducationAndCause39", (d) => {
     const eduCauseData = new Data(d);
 
@@ -32,7 +34,7 @@ function run () {
     });
 
     // Construct a matrix from the data
-    const eduCauseMatrix = new Matrix(
+    let eduCauseMatrix = new Matrix(
       eduCauseData.runPipeline(),
       "Education",
       "Cause of Death"
@@ -43,6 +45,29 @@ function run () {
 
     // Construct a view for the matrix
     eduCauseMatrix.bubbleView("#eduCauseViz");
+
+    // Handle year switching
+    $('input[name=yearselect]').change((e) => {
+      const year = event.target.value
+
+      if (year === "all") {
+        eduCauseData.removeNamedPipe("year");
+      }
+      else {
+        eduCauseData.addNamedPipe("year", (rawData) => {
+          return _.filter(rawData, datum => datum.Year === parseInt(year));
+        });
+      }
+
+      // Regenerate Matrix & Viz
+      eduCauseMatrix = new Matrix(
+        eduCauseData.runPipeline(),
+        "Education",
+        "Cause of Death"
+      );
+      eduCauseMatrix.normalizeByRow();
+      eduCauseMatrix.bubbleView("#eduCauseViz");
+    })
   });
 }
 
@@ -361,10 +386,19 @@ function getDataRows (data, parameter, value) {
 function Data(rawData) {
   this.rawData = rawData;
   this.pipeline = [];
+  this.namedPipes = {};
 }
 
 Data.prototype.addPipe = function(pipe) {
   this.pipeline.push(pipe);
+}
+
+Data.prototype.addNamedPipe = function(name, pipe) {
+  this.namedPipes[name] = pipe;
+}
+
+Data.prototype.removeNamedPipe = function(name) {
+  if (name in this.namedPipes) delete this.namedPipes[name];
 }
 
 Data.prototype.runPipeline = function () {
@@ -372,6 +406,10 @@ Data.prototype.runPipeline = function () {
   let transformedData = JSON.parse(JSON.stringify(this.rawData));
 
   this.pipeline.forEach((pipe) => {
+    transformedData = pipe(transformedData);
+  });
+
+  _.each(this.namedPipes, (pipe) => {
     transformedData = pipe(transformedData);
   });
 
@@ -581,6 +619,8 @@ Matrix.prototype.totalData = function (row, col) {
 Matrix.prototype.bubbleView = function (selector) {
   // Define View Variables
   const root = d3.select(selector);
+  root.selectAll("*").remove();
+
   const width = parseInt(root.style("width"));
   const height = parseInt(root.style("height"));
 
