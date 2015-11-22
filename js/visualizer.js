@@ -262,17 +262,17 @@ var GLOBAL = {
   years : ["2003","2008", "2013"],
   education : [
     "Not Specified", 
-    "No formal education", 
-    "Years of elementary school", 
-    "1 Year of high school",
-    "2 Years of high school",
-    "3 Years of high school",
-    "4 Years of high school",
-    "1 Year of college",
-    "2 Years of college",
-    "3 Years of college",
-    "4 Years of college",
-    "5 or more years of college",
+    "No Formal Education", 
+    "Years of Elementary School", 
+    "1 Year of High School",
+    "2 Years of High School",
+    "3 Years of High School",
+    "4 Years of High School",
+    "1 Year of College",
+    "2 Years of College",
+    "3 Years of College",
+    "4 Years of College",
+    "5+ Years of College",
     "Not Started"
   ],
   ageStamps : [0,20,40,60,80,100,120,140]
@@ -403,28 +403,28 @@ const GROUPINGS = {
 
   "Education": {
     "Elementary and Middle School" : [
-      "1 Years of elementary school",
-      "2 Years of elementary school",
-      "3 Years of elementary school",
-      "4 Years of elementary school",
-      "5 Years of elementary school",
-      "6 Years of elementary school",
-      "7 Years of elementary school",
-      "8 Years of elementary school",
+      "1 Years of Elementary School",
+      "2 Years of Elementary School",
+      "3 Years of Elementary School",
+      "4 Years of Elementary School",
+      "5 Years of Elementary School",
+      "6 Years of Elementary School",
+      "7 Years of Elementary School",
+      "8 Years of Elementary School",
     ],
 
     "High School": [
-      "1 Year of high school",
-      "2 Years of high school",
-      "3 Years of high school",
-      "4 Years of high school",
+      "1 Year of High School",
+      "2 Years of High School",
+      "3 Years of High School",
+      "4 Years of High School",
     ],
 
     "College": [
-      "1 Year of college",
-      "2 Years of college",
-      "3 Years of college",
-      "4 Years of college",
+      "1 Year of College",
+      "2 Years of College",
+      "3 Years of College",
+      "4 Years of College",
     ],
   }
 }
@@ -580,11 +580,25 @@ Matrix.prototype.bubbleView = function (selector) {
       .text(label)
       .attr({
         x,
-        y,
+        y: y - 5,
       })
       .style({
-        width: `${elemWidth * (MARGIN_INDICIES)}px`,  // Its not very effective.
-        "text-overflow": "ellipsis",
+        "fill": "rgb(105, 105, 105)",
+        "font-size": "12px",
+        "text-transform": "capitalize",
+      });
+
+    rowLabels.append("line")
+      .attr({
+        x1: 10,
+        x2: width - 10,
+        y1: y,
+        y2: y,
+      })
+      .style({
+        "stroke-width": "1px",
+        "stroke-opacity": "0.1",
+        "stroke": "black",
       });
   });
 
@@ -597,10 +611,28 @@ Matrix.prototype.bubbleView = function (selector) {
     colLabels.append("text")
       .text(label)
       .attr({
-        x,
+        x: x + 5,
         y,
         "transform": `rotate(30 ${x} ${y})`,
+      })
+      .style({
+        "fill": "rgb(105, 105, 105)",
+        "font-size": "12px",
+        "text-transform": "capitalize",
       });
+
+    colLabels.append("line")
+      .attr({
+        x1: x,
+        x2: x,
+        y1: 10,
+        y2: y,
+      })
+      .style({
+        "stroke-width": "1px",
+        "stroke-opacity": "0.1",
+        "stroke": "black",
+      })
   });
 
   // Render Data as Circles
@@ -612,8 +644,7 @@ Matrix.prototype.bubbleView = function (selector) {
           cx: elemWidth * (colIndex + MARGIN_INDICIES),
           cy: elemHeight * (rowIndex) + maxRadius,
           r: Math.sqrt(this.matrix[rowIndex][colIndex].size / Math.PI) * maxRadius,
-          "fill-opacity": 0.9,
-          "stroke": "1px",
+          "fill": "rgb(105, 105, 105)",
         })
         .on("mouseover", (event) => {
           console.log(this.matrix[rowIndex][colIndex])
