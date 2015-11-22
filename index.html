@@ -31,7 +31,7 @@
 				</button>
 				<button
 					class="btn btn-default navbar-btn"
-					onclick="$('#viz1').hide(); $('#viz2').show();"
+					onclick="$('#viz1').hide(); $('#viz2').show()"
 				>
 					Cause of Death by Educational Attainment
 				</button>
@@ -50,8 +50,9 @@
 			<svg id="eduAgeViz" height="1000" width="2000" class="centeredSvg"></svg>
 		</div>
 
-		<div id="viz2" style="display: none">
-			<svg id="eduCauseViz" height="1000" width="2000" class="centeredSvg"></svg>
+		<div id="viz2" 
+			style="display: none;">
+			<svg id="eduCauseViz" height="800" width="1500" class="centeredSvg"></svg>
 		</div>
 
 

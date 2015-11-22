@@ -644,10 +644,38 @@ Matrix.prototype.bubbleView = function (selector) {
           cx: elemWidth * (colIndex + MARGIN_INDICIES),
           cy: elemHeight * (rowIndex) + maxRadius,
           r: Math.sqrt(this.matrix[rowIndex][colIndex].size / Math.PI) * maxRadius,
-          "fill": "rgb(105, 105, 105)",
+          "fill": "rgb(85, 85, 85)",
         })
-        .on("mouseover", (event) => {
-          console.log(this.matrix[rowIndex][colIndex])
+        .on("mouseover", (e) => {
+        //   let body = d3.select("body");
+        //   body.select(".tooltip").remove();
+        //   body.append("div")
+        //     .attr("class", "tooltip")
+        //     .style("opacity", 0);
+        //     .class({
+        //       : e.clientX;
+        // y=e.clientY;
+        //     })
+        //   this.style.fill = "#696969"; 
+        const tooltip = d3.select(".tooltip")
+      tooltip.transition()
+         .duration(200)
+         .style("opacity", .9)
+         .style("background-color","#696969")
+         .style("fill", "none")
+         .style("stroke", "#fff")
+         .style("stroke-width", 6)
+         .style("border-radius", "10")
+         .style("padding", "10");
+         const d = this.matrix[rowIndex][colIndex];
+          // content
+          tooltip.html(
+            `<center> ${d.colLabel} <br/>
+             ${(d.size * 100).toFixed(1)}% of Deaths of Persons <br/>
+             with Highest Educational Status </br>
+             ${d.rowLabel} </center>`)
+           .style("left", (d3.event.pageX + 5) + "px")
+           .style("top", (d3.event.pageY - 28) + "px");
         });
     });
   });
