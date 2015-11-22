@@ -26,4 +26,4 @@ Backend:
 -`server.py`: Runs the server, reading data from `warehouse.db` and also some information about available tables from `tables.py`. Serves `index.html`
 
 Front End:
-- `index.html`: Requests all contents of the `\js\` directory for use on the front-end
+-`index.html`: Requests all contents of the `\js\` directory for use on the front-end
