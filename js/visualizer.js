@@ -240,7 +240,7 @@ function updateViewFromButton(year){
         tooltip.transition()
            .duration(200)
            .style("opacity", .9)
-           .style("background-color","#696969")
+           .style("background-color","#EEE")
            .style("fill", "none")
            .style("stroke", "#fff")
            .style("stroke-width", 6)
